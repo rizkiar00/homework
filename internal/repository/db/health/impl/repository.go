@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 
-	"github.com/rizkiar00/homework/pkg/config"
+	"github.com/rizkiar00/homework/internal/model"
 )
 
 type repository struct {
-	cfg config.Config
+	db model.Database
 }
 
-func New(cfg config.Config) *repository {
-	return &repository{cfg: cfg}
+func New(db model.Database) *repository {
+	return &repository{db: db}
 }
 
 func (r *repository) Check(ctx context.Context) error {
@@ -20,9 +20,14 @@ func (r *repository) Check(ctx context.Context) error {
 		return err
 	}
 
-	if !r.cfg.Database.IsConfigured() {
+	if r.db == nil {
 		return errors.New("database is not configured")
 	}
 
-	return nil
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDB.PingContext(ctx)
 }

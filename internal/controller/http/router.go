@@ -22,7 +22,7 @@ func Register(container *dig.Container) error {
 
 func NewRouter(params RouterParams) *echo.Echo {
 	e := echo.New()
-	e.HideBanner = true
+	e.HideBanner = false
 
 	params.HealthController.RegisterRoutes(e)
 
