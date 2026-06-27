@@ -1,30 +1,40 @@
 package main
 
 import (
-	"net/http"
+	"log"
 
-	"github.com/gin-gonic/gin"
-
-	"github.com/rizkiar00/homework/internal/controller"
-	"github.com/rizkiar00/homework/internal/repository"
-	"github.com/rizkiar00/homework/internal/usecase"
+	"github.com/labstack/echo/v4"
+	"github.com/rizkiar00/homework/pkg/config"
+	"github.com/rizkiar00/homework/pkg/di"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/dig"
 )
 
 func main() {
-	r := gin.Default()
+	container, err := di.NewContainer()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	if err := container.Invoke(run); err != nil {
+		log.Fatal(err)
+	}
+}
 
-	// wire hexagonal components: repository -> usecase -> controller
-	repo := repository.NewInMemoryRepo()
-	uc := usecase.NewEchoUsecase(repo)
-	ctrl := controller.NewEchoController(uc)
+type appParams struct {
+	dig.In
 
-	// routes
-	r.GET("/echo/:value", ctrl.GetEcho)
-	r.POST("/echo", ctrl.PostEcho)
+	Config config.Config
+	Logger *logrus.Logger
+	Router *echo.Echo
+}
 
-	r.Run(":8080")
+func run(params appParams) error {
+	params.Logger.WithFields(logrus.Fields{
+		"service": params.Config.AppConfig.Name,
+		"env":     params.Config.AppConfig.Env,
+		"address": params.Config.AppConfig.Address(),
+	}).Info("starting server")
+
+	return params.Router.Start(params.Config.AppConfig.Address())
 }
