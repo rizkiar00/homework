@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/rizkiar00/homework/internal/controller/http/auth"
 	"github.com/rizkiar00/homework/internal/controller/http/health"
 	"github.com/rizkiar00/homework/internal/controller/http/test_db"
 	"go.uber.org/dig"
@@ -10,12 +11,16 @@ import (
 type RouterParams struct {
 	dig.In
 
+	AuthController   *auth.Controller
 	HealthController *health.Controller
 	TestDBController *test_db.Controller
 }
 
 func Register(container *dig.Container) error {
 	if err := health.Register(container); err != nil {
+		return err
+	}
+	if err := auth.Register(container); err != nil {
 		return err
 	}
 
@@ -30,6 +35,7 @@ func NewRouter(params RouterParams) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = false
 
+	params.AuthController.RegisterRoutes(e)
 	params.HealthController.RegisterRoutes(e)
 	params.TestDBController.RegisterRoutes(e)
 	registerSwaggerRoutes(e)

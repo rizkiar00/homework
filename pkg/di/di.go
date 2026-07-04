@@ -6,6 +6,7 @@ import (
 	"github.com/rizkiar00/homework/internal/usecase"
 	"github.com/rizkiar00/homework/pkg/config"
 	"github.com/rizkiar00/homework/pkg/resource"
+	"github.com/rizkiar00/homework/pkg/token"
 	"go.uber.org/dig"
 )
 
@@ -15,6 +16,7 @@ func NewContainer() (*dig.Container, error) {
 	registers := []func(*dig.Container) error{
 		config.Register,
 		resource.Register,
+		token.Register,
 		repository.Register,
 		usecase.Register,
 		http.Register,

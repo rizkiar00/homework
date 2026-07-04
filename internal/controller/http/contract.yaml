@@ -25,6 +25,67 @@ paths:
           description: Application is ready
         "503":
           description: Application is not ready
+  /auth/register:
+    post:
+      tags:
+        - auth
+      operationId: Register
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCredentialRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "400":
+          description: Invalid request
+        "409":
+          description: Username already exists
+  /auth/login:
+    post:
+      tags:
+        - auth
+      operationId: Login
+      summary: Login and get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCredentialRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid username or password
+  /auth/me:
+    get:
+      tags:
+        - auth
+      operationId: GetMe
+      summary: Get current user from access token
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "401":
+          description: Unauthorized
   /test_db:
     post:
       tags:
@@ -163,7 +224,57 @@ paths:
         "404":
           description: Row not found
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
+    AuthCredentialRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: rizki
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: secret123
+    AuthUserResponse:
+      type: object
+      required:
+        - id_user
+        - username
+        - role
+      properties:
+        id_user:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: rizki
+        role:
+          type: string
+          example: user
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
     TestDBRequest:
       type: object
       properties:

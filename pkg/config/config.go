@@ -8,6 +8,7 @@ import (
 type Config struct {
 	AppConfig AppConfig
 	Database  DatabaseConfig
+	JWT       JWTConfig
 }
 
 func New() (Config, error) {
