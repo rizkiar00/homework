@@ -3,6 +3,8 @@ package test_db
 import (
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rizkiar00/homework/internal/model"
@@ -41,7 +43,12 @@ func (c *Controller) Create(ctx echo.Context) error {
 }
 
 func (c *Controller) FindAll(ctx echo.Context) error {
-	response, err := c.uc.FindAll(ctx.Request().Context())
+	request, err := parseListRequest(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, errorResponse(err.Error()))
+	}
+
+	response, err := c.uc.FindAll(ctx.Request().Context(), request)
 	if err != nil {
 		return writeError(ctx, err)
 	}
@@ -84,10 +91,46 @@ func writeError(ctx echo.Context, err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ctx.JSON(http.StatusNotFound, errorResponse("data not found"))
 	}
+	if strings.Contains(err.Error(), "order_by must be") || strings.Contains(err.Error(), "order_dir must be") {
+		return ctx.JSON(http.StatusBadRequest, errorResponse(err.Error()))
+	}
 
 	return ctx.JSON(http.StatusInternalServerError, errorResponse(err.Error()))
 }
 
 func errorResponse(message string) map[string]string {
 	return map[string]string{"error": message}
+}
+
+func parseListRequest(ctx echo.Context) (model.TestDBListRequest, error) {
+	page, err := parseIntQuery(ctx, "page", 1)
+	if err != nil {
+		return model.TestDBListRequest{}, err
+	}
+
+	limit, err := parseIntQuery(ctx, "limit", 10)
+	if err != nil {
+		return model.TestDBListRequest{}, err
+	}
+
+	return model.TestDBListRequest{
+		Page:     page,
+		Limit:    limit,
+		OrderBy:  ctx.QueryParam("order_by"),
+		OrderDir: ctx.QueryParam("order_dir"),
+	}, nil
+}
+
+func parseIntQuery(ctx echo.Context, name string, defaultValue int) (int, error) {
+	value := ctx.QueryParam(name)
+	if value == "" {
+		return defaultValue, nil
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, errors.New(name + " must be a number")
+	}
+
+	return parsed, nil
 }

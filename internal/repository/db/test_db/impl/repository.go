@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/rizkiar00/homework/internal/entity"
 	"github.com/rizkiar00/homework/internal/model"
@@ -29,17 +30,23 @@ func (r *repository) Create(ctx context.Context, data entity.TestTable) (entity.
 	return data, nil
 }
 
-func (r *repository) FindAll(ctx context.Context) ([]entity.TestTable, error) {
+func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOption) ([]entity.TestTable, int64, error) {
 	if r.db == nil {
-		return nil, errors.New("database is not configured")
+		return nil, 0, errors.New("database is not configured")
+	}
+
+	var total int64
+	if err := r.db.WithContext(ctx).Model(&entity.TestTable{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
 	var rows []entity.TestTable
-	if err := r.db.WithContext(ctx).Order("id_test asc").Find(&rows).Error; err != nil {
-		return nil, err
+	order := fmt.Sprintf("%s %s", option.OrderBy, option.OrderDir)
+	if err := r.db.WithContext(ctx).Order(order).Limit(option.Limit).Offset(option.Offset).Find(&rows).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return rows, nil
+	return rows, total, nil
 }
 
 func (r *repository) FindByID(ctx context.Context, id string) (entity.TestTable, error) {

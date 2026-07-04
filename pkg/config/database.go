@@ -22,7 +22,7 @@ func (c DatabaseConfig) GenerateConnectionString() string {
 	}
 
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?search_path=%s&sslmode=disable",
+		"postgres://%s:%s@%s:%d/%s?search_path=%s&sslmode=disable&connect_timeout=5",
 		c.Username,
 		c.Password,
 		c.Host,

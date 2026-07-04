@@ -32,6 +32,7 @@ func NewRouter(params RouterParams) *echo.Echo {
 
 	params.HealthController.RegisterRoutes(e)
 	params.TestDBController.RegisterRoutes(e)
+	registerSwaggerRoutes(e)
 
 	return e
 }
