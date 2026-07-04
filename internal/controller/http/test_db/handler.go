@@ -7,25 +7,32 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/model"
 	testDBUsecase "github.com/rizkiar00/homework/internal/usecase/test_db"
+	"github.com/rizkiar00/homework/pkg/token"
 	"gorm.io/gorm"
 )
 
 type Controller struct {
-	uc testDBUsecase.Usecase
+	uc           testDBUsecase.Usecase
+	tokenService *token.Service
 }
 
-func NewController(uc testDBUsecase.Usecase) *Controller {
-	return &Controller{uc: uc}
+func NewController(uc testDBUsecase.Usecase, tokenService *token.Service) *Controller {
+	return &Controller{
+		uc:           uc,
+		tokenService: tokenService,
+	}
 }
 
 func (c *Controller) RegisterRoutes(e *echo.Echo) {
-	e.POST("/test_db", c.Create)
-	e.GET("/test_db", c.FindAll)
-	e.GET("/test_db/:id_test", c.FindByID)
-	e.PUT("/test_db/:id_test", c.Update)
-	e.DELETE("/test_db/:id_test", c.Delete)
+	group := e.Group("/test_db", middleware.JWT(c.tokenService))
+	group.POST("", c.Create)
+	group.GET("", c.FindAll)
+	group.GET("/:id_test", c.FindByID)
+	group.PUT("/:id_test", c.Update)
+	group.DELETE("/:id_test", c.Delete)
 }
 
 func (c *Controller) Create(ctx echo.Context) error {

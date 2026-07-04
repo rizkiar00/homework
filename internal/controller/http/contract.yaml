@@ -92,6 +92,8 @@ paths:
         - test_db
       operationId: CreateTestDB
       summary: Create test table row
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -110,6 +112,8 @@ paths:
         - test_db
       operationId: GetTestDBList
       summary: Get all test table rows
+      security:
+        - bearerAuth: []
       parameters:
         - name: page
           in: query
@@ -163,6 +167,8 @@ paths:
         - test_db
       operationId: GetTestDBByID
       summary: Get test table row by id
+      security:
+        - bearerAuth: []
       parameters:
         - name: id_test
           in: path
@@ -184,6 +190,8 @@ paths:
         - test_db
       operationId: UpdateTestDB
       summary: Update test table row
+      security:
+        - bearerAuth: []
       parameters:
         - name: id_test
           in: path
@@ -211,6 +219,8 @@ paths:
         - test_db
       operationId: DeleteTestDB
       summary: Delete test table row
+      security:
+        - bearerAuth: []
       parameters:
         - name: id_test
           in: path
