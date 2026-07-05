@@ -2,7 +2,9 @@ package model
 
 import "errors"
 
+import "github.com/rizkiar00/homework/pkg/constant"
+
 var (
-	ErrInvalidCredential     = errors.New("invalid username or password")
-	ErrUsernameAlreadyExists = errors.New("username already exists")
+	ErrInvalidCredential     = errors.New(constant.MessageInvalidAuthCredential)
+	ErrUsernameAlreadyExists = errors.New(constant.MessageUsernameAlreadyExists)
 )

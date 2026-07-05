@@ -5,27 +5,28 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rizkiar00/homework/pkg/constant"
 	"github.com/rizkiar00/homework/pkg/token"
 )
 
-const UserClaimsKey = "user_claims"
+const UserClaimsKey = constant.ContextUserClaimsKey
 
 func JWT(tokenService *token.Service) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			header := ctx.Request().Header.Get(echo.HeaderAuthorization)
 			if header == "" {
-				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": constant.MessageUnauthorized})
 			}
 
-			value := strings.TrimPrefix(header, "Bearer ")
+			value := strings.TrimPrefix(header, constant.AuthorizationBearerPrefix)
 			if value == header || value == "" {
-				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": constant.MessageUnauthorized})
 			}
 
 			claims, err := tokenService.Parse(value)
 			if err != nil {
-				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+				return ctx.JSON(http.StatusUnauthorized, map[string]string{"error": constant.MessageUnauthorized})
 			}
 
 			ctx.Set(UserClaimsKey, claims)

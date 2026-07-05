@@ -6,6 +6,7 @@ import (
 	"github.com/rizkiar00/homework/internal/model"
 	healthRepo "github.com/rizkiar00/homework/internal/repository/db/health"
 	"github.com/rizkiar00/homework/pkg/config"
+	"github.com/rizkiar00/homework/pkg/constant"
 )
 
 type usecase struct {
@@ -26,7 +27,7 @@ func (u *usecase) Health(ctx context.Context) (model.HealthResponse, error) {
 	}
 
 	return model.HealthResponse{
-		Status:  "ok",
+		Status:  constant.StatusOK,
 		Service: u.cfg.AppConfig.Name,
 		Env:     u.cfg.AppConfig.Env,
 	}, nil
@@ -35,12 +36,12 @@ func (u *usecase) Health(ctx context.Context) (model.HealthResponse, error) {
 func (u *usecase) Readiness(ctx context.Context) (model.ReadinessResponse, error) {
 	checks := map[string]model.ReadinessCheck{
 		"app": {
-			Status:  "ok",
-			Message: "application is ready",
+			Status:  constant.StatusOK,
+			Message: constant.MessageApplicationReady,
 		},
 	}
 
-	status := "ready"
+	status := constant.StatusReady
 	if err := u.repo.Check(ctx); err != nil {
 		checks["database"] = model.ReadinessCheck{
 			Status:  "skipped",
@@ -48,8 +49,8 @@ func (u *usecase) Readiness(ctx context.Context) (model.ReadinessResponse, error
 		}
 	} else {
 		checks["database"] = model.ReadinessCheck{
-			Status:  "ok",
-			Message: "database configuration is present",
+			Status:  constant.StatusOK,
+			Message: constant.MessageDatabaseConfigIsAvailable,
 		}
 	}
 

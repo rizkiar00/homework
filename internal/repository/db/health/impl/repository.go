@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/rizkiar00/homework/internal/model"
+	"github.com/rizkiar00/homework/pkg/constant"
 )
 
 type repository struct {
@@ -21,7 +22,7 @@ func (r *repository) Check(ctx context.Context) error {
 	}
 
 	if r.db == nil {
-		return errors.New("database is not configured")
+		return errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
 	sqlDB, err := r.db.DB()

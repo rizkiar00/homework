@@ -10,6 +10,7 @@ import (
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/model"
 	testDBUsecase "github.com/rizkiar00/homework/internal/usecase/test_db"
+	"github.com/rizkiar00/homework/pkg/constant"
 	"github.com/rizkiar00/homework/pkg/token"
 	"gorm.io/gorm"
 )
@@ -38,7 +39,7 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 func (c *Controller) Create(ctx echo.Context) error {
 	var request model.CreateTestDBRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse("invalid request body"))
+		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
 	}
 
 	response, err := c.uc.Create(ctx.Request().Context(), request)
@@ -75,7 +76,7 @@ func (c *Controller) FindByID(ctx echo.Context) error {
 func (c *Controller) Update(ctx echo.Context) error {
 	var request model.UpdateTestDBRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse("invalid request body"))
+		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
 	}
 
 	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("id_test"), request)
@@ -96,9 +97,9 @@ func (c *Controller) Delete(ctx echo.Context) error {
 
 func writeError(ctx echo.Context, err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ctx.JSON(http.StatusNotFound, errorResponse("data not found"))
+		return ctx.JSON(http.StatusNotFound, errorResponse(constant.MessageDataNotFound))
 	}
-	if strings.Contains(err.Error(), "order_by must be") || strings.Contains(err.Error(), "order_dir must be") {
+	if strings.Contains(err.Error(), constant.MessageInvalidOrderBy) || strings.Contains(err.Error(), constant.MessageInvalidOrderDir) {
 		return ctx.JSON(http.StatusBadRequest, errorResponse(err.Error()))
 	}
 

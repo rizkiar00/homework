@@ -8,6 +8,7 @@ import (
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/model"
 	authUsecase "github.com/rizkiar00/homework/internal/usecase/auth"
+	"github.com/rizkiar00/homework/pkg/constant"
 	"github.com/rizkiar00/homework/pkg/token"
 	"gorm.io/gorm"
 )
@@ -33,7 +34,7 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 func (c *Controller) Register(ctx echo.Context) error {
 	var request model.RegisterRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse("invalid request body"))
+		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
 	}
 
 	response, err := c.uc.Register(ctx.Request().Context(), request)
@@ -47,7 +48,7 @@ func (c *Controller) Register(ctx echo.Context) error {
 func (c *Controller) Login(ctx echo.Context) error {
 	var request model.LoginRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse("invalid request body"))
+		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
 	}
 
 	response, err := c.uc.Login(ctx.Request().Context(), request)
@@ -61,7 +62,7 @@ func (c *Controller) Login(ctx echo.Context) error {
 func (c *Controller) Me(ctx echo.Context) error {
 	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
 	if !ok {
-		return ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized"))
+		return ctx.JSON(http.StatusUnauthorized, errorResponse(constant.MessageUnauthorized))
 	}
 
 	response, err := c.uc.Me(ctx.Request().Context(), claims.UserID)
@@ -80,7 +81,7 @@ func writeError(ctx echo.Context, err error) error {
 		return ctx.JSON(http.StatusConflict, errorResponse(err.Error()))
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ctx.JSON(http.StatusNotFound, errorResponse("data not found"))
+		return ctx.JSON(http.StatusNotFound, errorResponse(constant.MessageDataNotFound))
 	}
 
 	return ctx.JSON(http.StatusInternalServerError, errorResponse(err.Error()))

@@ -7,6 +7,7 @@ import (
 
 	"github.com/rizkiar00/homework/internal/entity"
 	"github.com/rizkiar00/homework/internal/model"
+	"github.com/rizkiar00/homework/pkg/constant"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +21,7 @@ func New(db model.Database) *repository {
 
 func (r *repository) Create(ctx context.Context, data entity.TestTable) (entity.TestTable, error) {
 	if r.db == nil {
-		return entity.TestTable{}, errors.New("database is not configured")
+		return entity.TestTable{}, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
@@ -32,7 +33,7 @@ func (r *repository) Create(ctx context.Context, data entity.TestTable) (entity.
 
 func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOption) ([]entity.TestTable, int64, error) {
 	if r.db == nil {
-		return nil, 0, errors.New("database is not configured")
+		return nil, 0, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
 	var total int64
@@ -51,11 +52,11 @@ func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOpti
 
 func (r *repository) FindByID(ctx context.Context, id string) (entity.TestTable, error) {
 	if r.db == nil {
-		return entity.TestTable{}, errors.New("database is not configured")
+		return entity.TestTable{}, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
 	var row entity.TestTable
-	if err := r.db.WithContext(ctx).Where("id_test = ?", id).First(&row).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(constant.ColumnIDTest+" = ?", id).First(&row).Error; err != nil {
 		return entity.TestTable{}, err
 	}
 
@@ -64,14 +65,14 @@ func (r *repository) FindByID(ctx context.Context, id string) (entity.TestTable,
 
 func (r *repository) Update(ctx context.Context, data entity.TestTable) (entity.TestTable, error) {
 	if r.db == nil {
-		return entity.TestTable{}, errors.New("database is not configured")
+		return entity.TestTable{}, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
 	result := r.db.WithContext(ctx).
 		Model(&entity.TestTable{}).
-		Where("id_test = ?", data.IDTest).
+		Where(constant.ColumnIDTest+" = ?", data.IDTest).
 		Updates(map[string]interface{}{
-			"desc_test": data.DescTest,
+			constant.ColumnDescTest: data.DescTest,
 		})
 	if result.Error != nil {
 		return entity.TestTable{}, result.Error
@@ -85,10 +86,10 @@ func (r *repository) Update(ctx context.Context, data entity.TestTable) (entity.
 
 func (r *repository) Delete(ctx context.Context, id string) error {
 	if r.db == nil {
-		return errors.New("database is not configured")
+		return errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
-	result := r.db.WithContext(ctx).Where("id_test = ?", id).Delete(&entity.TestTable{})
+	result := r.db.WithContext(ctx).Where(constant.ColumnIDTest+" = ?", id).Delete(&entity.TestTable{})
 	if result.Error != nil {
 		return result.Error
 	}

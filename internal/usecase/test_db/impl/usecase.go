@@ -10,6 +10,7 @@ import (
 	"github.com/rizkiar00/homework/internal/entity"
 	"github.com/rizkiar00/homework/internal/model"
 	testDBRepo "github.com/rizkiar00/homework/internal/repository/db/test_db"
+	"github.com/rizkiar00/homework/pkg/constant"
 )
 
 type usecase struct {
@@ -106,19 +107,19 @@ func toResponse(row entity.TestTable) model.TestDBResponse {
 
 func normalizeListRequest(request model.TestDBListRequest) model.TestDBListRequest {
 	if request.Page < 1 {
-		request.Page = 1
+		request.Page = constant.DefaultPage
 	}
 	if request.Limit < 1 {
-		request.Limit = 10
+		request.Limit = constant.DefaultLimit
 	}
-	if request.Limit > 100 {
-		request.Limit = 100
+	if request.Limit > constant.MaxLimit {
+		request.Limit = constant.MaxLimit
 	}
 	if request.OrderBy == "" {
-		request.OrderBy = "id_test"
+		request.OrderBy = constant.OrderByIDTest
 	}
 	if request.OrderDir == "" {
-		request.OrderDir = "asc"
+		request.OrderDir = constant.OrderDirAsc
 	}
 
 	return request
@@ -126,22 +127,22 @@ func normalizeListRequest(request model.TestDBListRequest) model.TestDBListReque
 
 func normalizeOrderBy(orderBy string) (string, error) {
 	switch orderBy {
-	case "id_test":
-		return "id_test", nil
-	case "desc_test":
-		return "desc_test", nil
+	case constant.OrderByIDTest:
+		return constant.OrderByIDTest, nil
+	case constant.OrderByDescTest:
+		return constant.OrderByDescTest, nil
 	default:
-		return "", fmt.Errorf("order_by must be one of: id_test, desc_test")
+		return "", fmt.Errorf(constant.MessageInvalidOrderBy)
 	}
 }
 
 func normalizeOrderDir(orderDir string) (string, error) {
 	switch strings.ToLower(orderDir) {
-	case "asc":
-		return "asc", nil
-	case "desc":
-		return "desc", nil
+	case constant.OrderDirAsc:
+		return constant.OrderDirAsc, nil
+	case constant.OrderDirDesc:
+		return constant.OrderDirDesc, nil
 	default:
-		return "", fmt.Errorf("order_dir must be one of: asc, desc")
+		return "", fmt.Errorf(constant.MessageInvalidOrderDir)
 	}
 }

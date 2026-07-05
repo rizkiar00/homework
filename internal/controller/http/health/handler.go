@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	healthUsecase "github.com/rizkiar00/homework/internal/usecase/health"
+	"github.com/rizkiar00/homework/pkg/constant"
 )
 
 type Controller struct {
@@ -40,7 +41,7 @@ func (c *Controller) Readiness(ctx echo.Context) error {
 	}
 
 	status := http.StatusOK
-	if res.Status != "ready" {
+	if res.Status != constant.StatusReady {
 		status = http.StatusServiceUnavailable
 	}
 

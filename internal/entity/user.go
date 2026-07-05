@@ -2,6 +2,8 @@ package entity
 
 import "time"
 
+import "github.com/rizkiar00/homework/pkg/constant"
+
 type User struct {
 	IDUser       string    `gorm:"column:id_user;primaryKey;type:uuid"`
 	Username     string    `gorm:"column:username"`
@@ -11,5 +13,5 @@ type User struct {
 }
 
 func (User) TableName() string {
-	return "public.users"
+	return constant.TableUsers
 }

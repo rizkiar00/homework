@@ -10,6 +10,7 @@ import (
 	"github.com/rizkiar00/homework/internal/entity"
 	"github.com/rizkiar00/homework/internal/model"
 	userRepo "github.com/rizkiar00/homework/internal/repository/db/user"
+	"github.com/rizkiar00/homework/pkg/constant"
 	"github.com/rizkiar00/homework/pkg/token"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -42,7 +43,7 @@ func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (
 		IDUser:       uuid.NewString(),
 		Username:     request.Username,
 		PasswordHash: string(hash),
-		Role:         "user",
+		Role:         constant.RoleUser,
 		CreatedAt:    time.Now(),
 	})
 	if err != nil {
@@ -75,7 +76,7 @@ func (u *usecase) Login(ctx context.Context, request model.LoginRequest) (model.
 
 	return model.LoginResponse{
 		AccessToken: accessToken,
-		TokenType:   "Bearer",
+		TokenType:   constant.TokenTypeBearer,
 		ExpiresIn:   expiresIn,
 	}, nil
 }
