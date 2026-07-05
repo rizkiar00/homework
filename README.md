@@ -70,6 +70,7 @@ APP_NAME=homework-api
 APP_ENV=local
 APP_HOST=127.0.0.1
 APP_PORT=8081
+APP_SHUTDOWN_TIMEOUT_SECONDS=10
 
 DB_DRIVER=postgres
 DB_HOST=auto
@@ -128,6 +129,8 @@ The server will be available at:
 ```text
 http://127.0.0.1:8081
 ```
+
+Stop the server with `Ctrl+C`. The app will stop accepting new requests, wait for active requests to finish within `APP_SHUTDOWN_TIMEOUT_SECONDS`, and close the database connection.
 
 If the global Go build cache has permission issues on Windows, use a local cache:
 
