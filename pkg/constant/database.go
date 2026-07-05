@@ -6,13 +6,16 @@ const (
 )
 
 const (
-	TableUsers     = "public.users"
-	TableTestTable = "public.test_table"
+	TableUsers        = "public.users"
+	TableTestTable    = "public.test_table"
+	TableActions      = "public.actions"
+	TableRoles        = "public.roles"
+	TableRoleAccesses = "public.role_accesses"
 )
 
 const (
-	ColumnIDUser   = "id_user"
+	ColumnUserID   = "user_id"
 	ColumnUsername = "username"
-	ColumnIDTest   = "id_test"
+	ColumnTestID   = "test_id"
 	ColumnDescTest = "desc_test"
 )

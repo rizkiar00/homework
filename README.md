@@ -26,9 +26,9 @@ A Go backend playground built to practice a lightweight version of a work-style 
 - Private `test_db` CRUD:
   - `POST /test_db`
   - `GET /test_db`
-  - `GET /test_db/{id_test}`
-  - `PUT /test_db/{id_test}`
-  - `DELETE /test_db/{id_test}`
+  - `GET /test_db/{test_id}`
+  - `PUT /test_db/{test_id}`
+  - `DELETE /test_db/{test_id}`
 - Pagination and ordering for `GET /test_db`
 - Swagger UI:
   - `/swagger/index.html`

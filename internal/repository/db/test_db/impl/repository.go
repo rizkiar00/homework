@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/rizkiar00/homework/internal/entity"
 	"github.com/rizkiar00/homework/internal/model"
@@ -37,13 +38,13 @@ func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOpti
 	}
 
 	var total int64
-	if err := r.db.WithContext(ctx).Model(&entity.TestTable{}).Count(&total).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&entity.TestTable{}).Where("is_active = ?", true).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	var rows []entity.TestTable
 	order := fmt.Sprintf("%s %s", option.OrderBy, option.OrderDir)
-	if err := r.db.WithContext(ctx).Order(order).Limit(option.Limit).Offset(option.Offset).Find(&rows).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("is_active = ?", true).Order(order).Limit(option.Limit).Offset(option.Offset).Find(&rows).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -56,7 +57,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (entity.TestTable,
 	}
 
 	var row entity.TestTable
-	if err := r.db.WithContext(ctx).Where(constant.ColumnIDTest+" = ?", id).First(&row).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(constant.ColumnTestID+" = ? AND is_active = ?", id, true).First(&row).Error; err != nil {
 		return entity.TestTable{}, err
 	}
 
@@ -68,11 +69,13 @@ func (r *repository) Update(ctx context.Context, data entity.TestTable) (entity.
 		return entity.TestTable{}, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
+	now := time.Now()
 	result := r.db.WithContext(ctx).
 		Model(&entity.TestTable{}).
-		Where(constant.ColumnIDTest+" = ?", data.IDTest).
+		Where(constant.ColumnTestID+" = ?", data.TestID).
 		Updates(map[string]interface{}{
 			constant.ColumnDescTest: data.DescTest,
+			"updated_at":            now,
 		})
 	if result.Error != nil {
 		return entity.TestTable{}, result.Error
@@ -81,7 +84,7 @@ func (r *repository) Update(ctx context.Context, data entity.TestTable) (entity.
 		return entity.TestTable{}, gorm.ErrRecordNotFound
 	}
 
-	return r.FindByID(ctx, data.IDTest)
+	return r.FindByID(ctx, data.TestID)
 }
 
 func (r *repository) Delete(ctx context.Context, id string) error {
@@ -89,7 +92,14 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 		return errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
-	result := r.db.WithContext(ctx).Where(constant.ColumnIDTest+" = ?", id).Delete(&entity.TestTable{})
+	now := time.Now()
+	result := r.db.WithContext(ctx).
+		Model(&entity.TestTable{}).
+		Where(constant.ColumnTestID+" = ? AND is_active = ?", id, true).
+		Updates(map[string]interface{}{
+			"is_active":  false,
+			"updated_at": now,
+		})
 	if result.Error != nil {
 		return result.Error
 	}

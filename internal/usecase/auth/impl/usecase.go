@@ -41,10 +41,11 @@ func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (
 	}
 
 	row, err := u.repo.Create(ctx, entity.User{
-		IDUser:       uuid.NewString(),
+		UserID:       uuid.NewString(),
 		Username:     request.Username,
 		PasswordHash: string(hash),
 		Role:         constant.RoleUser,
+		IsActive:     true,
 		CreatedAt:    time.Now(),
 	})
 	if err != nil {
@@ -70,7 +71,7 @@ func (u *usecase) Login(ctx context.Context, request model.LoginRequest) (model.
 		return model.LoginResponse{}, customerror.Unauthorized(constant.MessageInvalidAuthCredential)
 	}
 
-	accessToken, expiresIn, err := u.tokenService.Generate(row.IDUser, row.Username, row.Role)
+	accessToken, expiresIn, err := u.tokenService.Generate(row.UserID, row.Username, row.Role)
 	if err != nil {
 		return model.LoginResponse{}, err
 	}
@@ -93,7 +94,7 @@ func (u *usecase) Me(ctx context.Context, userID string) (model.AuthUserResponse
 
 func toAuthUserResponse(row entity.User) model.AuthUserResponse {
 	return model.AuthUserResponse{
-		IDUser:   row.IDUser,
+		UserID:   row.UserID,
 		Username: row.Username,
 		Role:     row.Role,
 	}

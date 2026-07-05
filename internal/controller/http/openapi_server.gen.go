@@ -26,7 +26,7 @@ const (
 // Defines values for GetTestDBListParamsOrderBy.
 const (
 	DescTest GetTestDBListParamsOrderBy = "desc_test"
-	IdTest   GetTestDBListParamsOrderBy = "id_test"
+	TestId   GetTestDBListParamsOrderBy = "test_id"
 )
 
 // Valid indicates whether the value is a known member of the GetTestDBListParamsOrderBy enum.
@@ -34,7 +34,7 @@ func (e GetTestDBListParamsOrderBy) Valid() bool {
 	switch e {
 	case DescTest:
 		return true
-	case IdTest:
+	case TestId:
 		return true
 	default:
 		return false
@@ -74,8 +74,8 @@ type AuthUserAPIResponse struct {
 
 // AuthUserResponse defines model for AuthUserResponse.
 type AuthUserResponse struct {
-	IdUser   openapi_types.UUID `json:"id_user"`
 	Role     string             `json:"role"`
+	UserId   openapi_types.UUID `json:"user_id"`
 	Username string             `json:"username"`
 }
 
@@ -171,7 +171,7 @@ type TestDBRequest struct {
 // TestDBResponse defines model for TestDBResponse.
 type TestDBResponse struct {
 	DescTest *string            `json:"desc_test,omitempty"`
-	IdTest   openapi_types.UUID `json:"id_test"`
+	TestId   openapi_types.UUID `json:"test_id"`
 }
 
 // bearerAuthContextKey is the context key for bearerAuth security scheme
@@ -234,14 +234,14 @@ type ServerInterface interface {
 	// (POST /test_db)
 	CreateTestDB(ctx echo.Context) error
 	// Delete test table row
-	// (DELETE /test_db/{id_test})
-	DeleteTestDB(ctx echo.Context, idTest openapi_types.UUID) error
+	// (DELETE /test_db/{test_id})
+	DeleteTestDB(ctx echo.Context, testId openapi_types.UUID) error
 	// Get test table row by id
-	// (GET /test_db/{id_test})
-	GetTestDBByID(ctx echo.Context, idTest openapi_types.UUID) error
+	// (GET /test_db/{test_id})
+	GetTestDBByID(ctx echo.Context, testId openapi_types.UUID) error
 	// Update test table row
-	// (PUT /test_db/{id_test})
-	UpdateTestDB(ctx echo.Context, idTest openapi_types.UUID) error
+	// (PUT /test_db/{test_id})
+	UpdateTestDB(ctx echo.Context, testId openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -351,54 +351,54 @@ func (w *ServerInterfaceWrapper) CreateTestDB(ctx echo.Context) error {
 // DeleteTestDB converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteTestDB(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "id_test" -------------
-	var idTest openapi_types.UUID
+	// ------------- Path parameter "test_id" -------------
+	var testId openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id_test", ctx.Param("id_test"), &idTest, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	err = runtime.BindStyledParameterWithOptions("simple", "test_id", ctx.Param("test_id"), &testId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id_test: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter test_id: %s", err))
 	}
 
 	ctx.Set(string(BearerAuthScopes), []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteTestDB(ctx, idTest)
+	err = w.Handler.DeleteTestDB(ctx, testId)
 	return err
 }
 
 // GetTestDBByID converts echo context to params.
 func (w *ServerInterfaceWrapper) GetTestDBByID(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "id_test" -------------
-	var idTest openapi_types.UUID
+	// ------------- Path parameter "test_id" -------------
+	var testId openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id_test", ctx.Param("id_test"), &idTest, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	err = runtime.BindStyledParameterWithOptions("simple", "test_id", ctx.Param("test_id"), &testId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id_test: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter test_id: %s", err))
 	}
 
 	ctx.Set(string(BearerAuthScopes), []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetTestDBByID(ctx, idTest)
+	err = w.Handler.GetTestDBByID(ctx, testId)
 	return err
 }
 
 // UpdateTestDB converts echo context to params.
 func (w *ServerInterfaceWrapper) UpdateTestDB(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "id_test" -------------
-	var idTest openapi_types.UUID
+	// ------------- Path parameter "test_id" -------------
+	var testId openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id_test", ctx.Param("id_test"), &idTest, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	err = runtime.BindStyledParameterWithOptions("simple", "test_id", ctx.Param("test_id"), &testId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id_test: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter test_id: %s", err))
 	}
 
 	ctx.Set(string(BearerAuthScopes), []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.UpdateTestDB(ctx, idTest)
+	err = w.Handler.UpdateTestDB(ctx, testId)
 	return err
 }
 
@@ -456,9 +456,9 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 	router.GET(options.BaseURL+"/readiness", wrapper.GetReadiness, options.OperationMiddlewares["GetReadiness"]...)
 	router.GET(options.BaseURL+"/test_db", wrapper.GetTestDBList, options.OperationMiddlewares["GetTestDBList"]...)
 	router.POST(options.BaseURL+"/test_db", wrapper.CreateTestDB, options.OperationMiddlewares["CreateTestDB"]...)
-	router.DELETE(options.BaseURL+"/test_db/:id_test", wrapper.DeleteTestDB, options.OperationMiddlewares["DeleteTestDB"]...)
-	router.GET(options.BaseURL+"/test_db/:id_test", wrapper.GetTestDBByID, options.OperationMiddlewares["GetTestDBByID"]...)
-	router.PUT(options.BaseURL+"/test_db/:id_test", wrapper.UpdateTestDB, options.OperationMiddlewares["UpdateTestDB"]...)
+	router.DELETE(options.BaseURL+"/test_db/:test_id", wrapper.DeleteTestDB, options.OperationMiddlewares["DeleteTestDB"]...)
+	router.GET(options.BaseURL+"/test_db/:test_id", wrapper.GetTestDBByID, options.OperationMiddlewares["GetTestDBByID"]...)
+	router.PUT(options.BaseURL+"/test_db/:test_id", wrapper.UpdateTestDB, options.OperationMiddlewares["UpdateTestDB"]...)
 
 }
 
@@ -467,33 +467,33 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"xe/YZQDlmNAe7dD5YP5vAAAA//8=",
+	"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",
+	"ABWY8h7v8Plg/ncAAAD//w==",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

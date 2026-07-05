@@ -30,9 +30,9 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 	group := e.Group("/test_db", middleware.JWT(c.tokenService))
 	group.POST("", c.Create)
 	group.GET("", c.FindAll)
-	group.GET("/:id_test", c.FindByID)
-	group.PUT("/:id_test", c.Update)
-	group.DELETE("/:id_test", c.Delete)
+	group.GET("/:test_id", c.FindByID)
+	group.PUT("/:test_id", c.Update)
+	group.DELETE("/:test_id", c.Delete)
 }
 
 func (c *Controller) Create(ctx echo.Context) error {
@@ -64,7 +64,7 @@ func (c *Controller) FindAll(ctx echo.Context) error {
 }
 
 func (c *Controller) FindByID(ctx echo.Context) error {
-	response, err := c.uc.FindByID(ctx.Request().Context(), ctx.Param("id_test"))
+	response, err := c.uc.FindByID(ctx.Request().Context(), ctx.Param("test_id"))
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
@@ -78,7 +78,7 @@ func (c *Controller) Update(ctx echo.Context) error {
 		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
-	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("id_test"), request)
+	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("test_id"), request)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
@@ -87,7 +87,7 @@ func (c *Controller) Update(ctx echo.Context) error {
 }
 
 func (c *Controller) Delete(ctx echo.Context) error {
-	if err := c.uc.Delete(ctx.Request().Context(), ctx.Param("id_test")); err != nil {
+	if err := c.uc.Delete(ctx.Request().Context(), ctx.Param("test_id")); err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
 

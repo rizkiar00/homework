@@ -34,7 +34,7 @@ func (r *repository) FindByUsername(ctx context.Context, username string) (entit
 	}
 
 	var row entity.User
-	if err := r.db.WithContext(ctx).Where(constant.ColumnUsername+" = ?", username).First(&row).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(constant.ColumnUsername+" = ? AND is_active = ?", username, true).First(&row).Error; err != nil {
 		return entity.User{}, err
 	}
 
@@ -47,7 +47,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (entity.User, erro
 	}
 
 	var row entity.User
-	if err := r.db.WithContext(ctx).Where(constant.ColumnIDUser+" = ?", id).First(&row).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(constant.ColumnUserID+" = ? AND is_active = ?", id, true).First(&row).Error; err != nil {
 		return entity.User{}, err
 	}
 

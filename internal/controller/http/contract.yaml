@@ -166,9 +166,9 @@ paths:
           schema:
             type: string
             enum:
-              - id_test
+              - test_id
               - desc_test
-            default: id_test
+            default: test_id
           description: Column used for sorting.
         - name: order_dir
           in: query
@@ -193,7 +193,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /test_db/{id_test}:
+  /test_db/{test_id}:
     get:
       tags:
         - test_db
@@ -202,7 +202,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id_test
+        - name: test_id
           in: path
           required: true
           schema:
@@ -229,7 +229,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id_test
+        - name: test_id
           in: path
           required: true
           schema:
@@ -262,7 +262,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id_test
+        - name: test_id
           in: path
           required: true
           schema:
@@ -305,11 +305,11 @@ components:
     AuthUserResponse:
       type: object
       required:
-        - id_user
+        - user_id
         - username
         - role
       properties:
-        id_user:
+        user_id:
           type: string
           format: uuid
         username:
@@ -442,9 +442,9 @@ components:
     TestDBResponse:
       type: object
       required:
-        - id_test
+        - test_id
       properties:
-        id_test:
+        test_id:
           type: string
           format: uuid
         desc_test:
@@ -510,7 +510,7 @@ components:
           example: 3
         order_by:
           type: string
-          example: id_test
+          example: test_id
         order_dir:
           type: string
           example: asc

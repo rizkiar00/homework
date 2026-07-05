@@ -9,7 +9,7 @@ type UpdateTestDBRequest struct {
 }
 
 type TestDBResponse struct {
-	IDTest   string  `json:"id_test"`
+	TestID   string  `json:"test_id"`
 	DescTest *string `json:"desc_test"`
 }
 

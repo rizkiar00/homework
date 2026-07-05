@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rizkiar00/homework/internal/entity"
@@ -23,8 +24,10 @@ func New(repo testDBRepo.Repository) *usecase {
 
 func (u *usecase) Create(ctx context.Context, request model.CreateTestDBRequest) (model.TestDBResponse, error) {
 	row, err := u.repo.Create(ctx, entity.TestTable{
-		IDTest:   uuid.NewString(),
-		DescTest: request.DescTest,
+		TestID:    uuid.NewString(),
+		DescTest:  request.DescTest,
+		IsActive:  true,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		return model.TestDBResponse{}, err
@@ -84,7 +87,7 @@ func (u *usecase) FindByID(ctx context.Context, id string) (model.TestDBResponse
 
 func (u *usecase) Update(ctx context.Context, id string, request model.UpdateTestDBRequest) (model.TestDBResponse, error) {
 	row, err := u.repo.Update(ctx, entity.TestTable{
-		IDTest:   id,
+		TestID:   id,
 		DescTest: request.DescTest,
 	})
 	if err != nil {
@@ -100,7 +103,7 @@ func (u *usecase) Delete(ctx context.Context, id string) error {
 
 func toResponse(row entity.TestTable) model.TestDBResponse {
 	return model.TestDBResponse{
-		IDTest:   row.IDTest,
+		TestID:   row.TestID,
 		DescTest: row.DescTest,
 	}
 }
@@ -116,7 +119,7 @@ func normalizeListRequest(request model.TestDBListRequest) model.TestDBListReque
 		request.Limit = constant.MaxLimit
 	}
 	if request.OrderBy == "" {
-		request.OrderBy = constant.OrderByIDTest
+		request.OrderBy = constant.OrderByTestID
 	}
 	if request.OrderDir == "" {
 		request.OrderDir = constant.OrderDirAsc
@@ -127,8 +130,8 @@ func normalizeListRequest(request model.TestDBListRequest) model.TestDBListReque
 
 func normalizeOrderBy(orderBy string) (string, error) {
 	switch orderBy {
-	case constant.OrderByIDTest:
-		return constant.OrderByIDTest, nil
+	case constant.OrderByTestID:
+		return constant.OrderByTestID, nil
 	case constant.OrderByDescTest:
 		return constant.OrderByDescTest, nil
 	default:
