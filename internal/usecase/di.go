@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/rizkiar00/homework/internal/usecase/access"
 	"github.com/rizkiar00/homework/internal/usecase/auth"
 	"github.com/rizkiar00/homework/internal/usecase/health"
 	"github.com/rizkiar00/homework/internal/usecase/test_db"
@@ -12,6 +13,9 @@ func Register(container *dig.Container) error {
 		return err
 	}
 	if err := auth.Register(container); err != nil {
+		return err
+	}
+	if err := access.Register(container); err != nil {
 		return err
 	}
 

@@ -29,6 +29,12 @@ A Go backend playground built to practice a lightweight version of a work-style 
   - `GET /test_db/{test_id}`
   - `PUT /test_db/{test_id}`
   - `DELETE /test_db/{test_id}`
+- Action based access management:
+  - `GET /actions`
+  - `POST /roles`
+  - `PUT /roles/{role_id}`
+  - `PUT /roles/{role_id}/actions`
+  - `PUT /users/{user_id}/role`
 - Pagination and ordering for `GET /test_db`
 - Swagger UI:
   - `/swagger/index.html`

@@ -59,6 +59,26 @@ func (e GetTestDBListParamsOrderDir) Valid() bool {
 	}
 }
 
+// ActionListAPIResponse defines model for ActionListAPIResponse.
+type ActionListAPIResponse struct {
+	Code    string           `json:"code"`
+	Data    []ActionResponse `json:"data"`
+	Message string           `json:"message"`
+}
+
+// ActionResponse defines model for ActionResponse.
+type ActionResponse struct {
+	ActionDesc string `json:"action_desc"`
+	ActionId   int64  `json:"action_id"`
+	ActionType string `json:"action_type"`
+	Endpoint   string `json:"endpoint"`
+}
+
+// AssignUserRoleRequest defines model for AssignUserRoleRequest.
+type AssignUserRoleRequest struct {
+	RoleId int64 `json:"role_id"`
+}
+
 // AuthCredentialRequest defines model for AuthCredentialRequest.
 type AuthCredentialRequest struct {
 	Password string `json:"password"`
@@ -77,6 +97,12 @@ type AuthUserResponse struct {
 	Role     string             `json:"role"`
 	UserId   openapi_types.UUID `json:"user_id"`
 	Username string             `json:"username"`
+}
+
+// CreateRoleRequest defines model for CreateRoleRequest.
+type CreateRoleRequest struct {
+	ActionIds *[]int64 `json:"action_ids,omitempty"`
+	RoleDesc  string   `json:"role_desc"`
 }
 
 // EmptyAPIResponse defines model for EmptyAPIResponse.
@@ -148,6 +174,27 @@ type ReadinessResponse struct {
 	Status string                    `json:"status"`
 }
 
+// RoleAPIResponse defines model for RoleAPIResponse.
+type RoleAPIResponse struct {
+	Code    string       `json:"code"`
+	Data    RoleResponse `json:"data"`
+	Message string       `json:"message"`
+}
+
+// RoleResponse defines model for RoleResponse.
+type RoleResponse struct {
+	ActionIds *[]int64          `json:"action_ids,omitempty"`
+	Actions   *[]ActionResponse `json:"actions,omitempty"`
+	IsActive  bool              `json:"is_active"`
+	RoleDesc  string            `json:"role_desc"`
+	RoleId    int64             `json:"role_id"`
+}
+
+// SetRoleActionsRequest defines model for SetRoleActionsRequest.
+type SetRoleActionsRequest struct {
+	ActionIds []int64 `json:"action_ids"`
+}
+
 // TestDBAPIResponse defines model for TestDBAPIResponse.
 type TestDBAPIResponse struct {
 	Code    string         `json:"code"`
@@ -172,6 +219,13 @@ type TestDBRequest struct {
 type TestDBResponse struct {
 	DescTest *string            `json:"desc_test,omitempty"`
 	TestId   openapi_types.UUID `json:"test_id"`
+}
+
+// UpdateRoleRequest defines model for UpdateRoleRequest.
+type UpdateRoleRequest struct {
+	ActionIds *[]int64 `json:"action_ids,omitempty"`
+	IsActive  *bool    `json:"is_active,omitempty"`
+	RoleDesc  *string  `json:"role_desc,omitempty"`
 }
 
 // bearerAuthContextKey is the context key for bearerAuth security scheme
@@ -204,14 +258,29 @@ type LoginJSONRequestBody = AuthCredentialRequest
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
 type RegisterJSONRequestBody = AuthCredentialRequest
 
+// CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
+type CreateRoleJSONRequestBody = CreateRoleRequest
+
+// UpdateRoleJSONRequestBody defines body for UpdateRole for application/json ContentType.
+type UpdateRoleJSONRequestBody = UpdateRoleRequest
+
+// SetRoleActionsJSONRequestBody defines body for SetRoleActions for application/json ContentType.
+type SetRoleActionsJSONRequestBody = SetRoleActionsRequest
+
 // CreateTestDBJSONRequestBody defines body for CreateTestDB for application/json ContentType.
 type CreateTestDBJSONRequestBody = TestDBRequest
 
 // UpdateTestDBJSONRequestBody defines body for UpdateTestDB for application/json ContentType.
 type UpdateTestDBJSONRequestBody = TestDBRequest
 
+// AssignUserRoleJSONRequestBody defines body for AssignUserRole for application/json ContentType.
+type AssignUserRoleJSONRequestBody = AssignUserRoleRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get all available API actions
+	// (GET /actions)
+	GetActions(ctx echo.Context) error
 	// Login and get access token
 	// (POST /auth/login)
 	Login(ctx echo.Context) error
@@ -227,6 +296,15 @@ type ServerInterface interface {
 	// Check application readiness
 	// (GET /readiness)
 	GetReadiness(ctx echo.Context) error
+	// Create role and optional access mapping
+	// (POST /roles)
+	CreateRole(ctx echo.Context) error
+	// Update role and optional access mapping
+	// (PUT /roles/{role_id})
+	UpdateRole(ctx echo.Context, roleId int64) error
+	// Replace action mapping for a role
+	// (PUT /roles/{role_id}/actions)
+	SetRoleActions(ctx echo.Context, roleId int64) error
 	// Get all test table rows
 	// (GET /test_db)
 	GetTestDBList(ctx echo.Context, params GetTestDBListParams) error
@@ -242,11 +320,25 @@ type ServerInterface interface {
 	// Update test table row
 	// (PUT /test_db/{test_id})
 	UpdateTestDB(ctx echo.Context, testId openapi_types.UUID) error
+	// Assign a role to a user
+	// (PUT /users/{user_id}/role)
+	AssignUserRole(ctx echo.Context, userId openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetActions converts echo context to params.
+func (w *ServerInterfaceWrapper) GetActions(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(string(BearerAuthScopes), []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetActions(ctx)
+	return err
 }
 
 // Login converts echo context to params.
@@ -293,6 +385,53 @@ func (w *ServerInterfaceWrapper) GetReadiness(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetReadiness(ctx)
+	return err
+}
+
+// CreateRole converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateRole(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(string(BearerAuthScopes), []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateRole(ctx)
+	return err
+}
+
+// UpdateRole converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateRole(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "role_id" -------------
+	var roleId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "role_id", ctx.Param("role_id"), &roleId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter role_id: %s", err))
+	}
+
+	ctx.Set(string(BearerAuthScopes), []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateRole(ctx, roleId)
+	return err
+}
+
+// SetRoleActions converts echo context to params.
+func (w *ServerInterfaceWrapper) SetRoleActions(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "role_id" -------------
+	var roleId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "role_id", ctx.Param("role_id"), &roleId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter role_id: %s", err))
+	}
+
+	ctx.Set(string(BearerAuthScopes), []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SetRoleActions(ctx, roleId)
 	return err
 }
 
@@ -402,6 +541,24 @@ func (w *ServerInterfaceWrapper) UpdateTestDB(ctx echo.Context) error {
 	return err
 }
 
+// AssignUserRole converts echo context to params.
+func (w *ServerInterfaceWrapper) AssignUserRole(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "user_id" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "user_id", ctx.Param("user_id"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter user_id: %s", err))
+	}
+
+	ctx.Set(string(BearerAuthScopes), []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AssignUserRole(ctx, userId)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -449,16 +606,21 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 		Handler: si,
 	}
 
+	router.GET(options.BaseURL+"/actions", wrapper.GetActions, options.OperationMiddlewares["GetActions"]...)
 	router.POST(options.BaseURL+"/auth/login", wrapper.Login, options.OperationMiddlewares["Login"]...)
 	router.GET(options.BaseURL+"/auth/me", wrapper.GetMe, options.OperationMiddlewares["GetMe"]...)
 	router.POST(options.BaseURL+"/auth/register", wrapper.Register, options.OperationMiddlewares["Register"]...)
 	router.GET(options.BaseURL+"/health", wrapper.GetHealth, options.OperationMiddlewares["GetHealth"]...)
 	router.GET(options.BaseURL+"/readiness", wrapper.GetReadiness, options.OperationMiddlewares["GetReadiness"]...)
+	router.POST(options.BaseURL+"/roles", wrapper.CreateRole, options.OperationMiddlewares["CreateRole"]...)
+	router.PUT(options.BaseURL+"/roles/:role_id", wrapper.UpdateRole, options.OperationMiddlewares["UpdateRole"]...)
+	router.PUT(options.BaseURL+"/roles/:role_id/actions", wrapper.SetRoleActions, options.OperationMiddlewares["SetRoleActions"]...)
 	router.GET(options.BaseURL+"/test_db", wrapper.GetTestDBList, options.OperationMiddlewares["GetTestDBList"]...)
 	router.POST(options.BaseURL+"/test_db", wrapper.CreateTestDB, options.OperationMiddlewares["CreateTestDB"]...)
 	router.DELETE(options.BaseURL+"/test_db/:test_id", wrapper.DeleteTestDB, options.OperationMiddlewares["DeleteTestDB"]...)
 	router.GET(options.BaseURL+"/test_db/:test_id", wrapper.GetTestDBByID, options.OperationMiddlewares["GetTestDBByID"]...)
 	router.PUT(options.BaseURL+"/test_db/:test_id", wrapper.UpdateTestDB, options.OperationMiddlewares["UpdateTestDB"]...)
+	router.PUT(options.BaseURL+"/users/:user_id/role", wrapper.AssignUserRole, options.OperationMiddlewares["AssignUserRole"]...)
 
 }
 
@@ -467,33 +629,41 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"ABWY8h7v8Plg/ncAAAD//w==",
+	"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",
+	"IsRTPMLpPP1fAAAA//8=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

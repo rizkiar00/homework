@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
+	"github.com/rizkiar00/homework/internal/controller/http/access"
 	"github.com/rizkiar00/homework/internal/controller/http/auth"
 	"github.com/rizkiar00/homework/internal/controller/http/health"
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
@@ -17,6 +18,7 @@ type RouterParams struct {
 	dig.In
 
 	AuthController   *auth.Controller
+	AccessController *access.Controller
 	HealthController *health.Controller
 	TestDBController *test_db.Controller
 	TokenService     *token.Service
@@ -29,6 +31,9 @@ func Register(container *dig.Container) error {
 		return err
 	}
 	if err := auth.Register(container); err != nil {
+		return err
+	}
+	if err := access.Register(container); err != nil {
 		return err
 	}
 
@@ -52,17 +57,23 @@ func NewRouter(params RouterParams) *echo.Echo {
 
 	handler := &APIHandler{
 		AuthController:   params.AuthController,
+		AccessController: params.AccessController,
 		HealthController: params.HealthController,
 		TestDBController: params.TestDBController,
 	}
 	RegisterHandlersWithOptions(e, handler, RegisterHandlersOptions{
 		OperationMiddlewares: map[string][]echo.MiddlewareFunc{
-			"GetMe":         {middleware.JWT(params.TokenService)},
-			"GetTestDBList": {middleware.JWT(params.TokenService)},
-			"CreateTestDB":  {middleware.JWT(params.TokenService)},
-			"GetTestDBByID": {middleware.JWT(params.TokenService)},
-			"UpdateTestDB":  {middleware.JWT(params.TokenService)},
-			"DeleteTestDB":  {middleware.JWT(params.TokenService)},
+			"GetMe":          {middleware.JWT(params.TokenService)},
+			"GetTestDBList":  {middleware.JWT(params.TokenService)},
+			"CreateTestDB":   {middleware.JWT(params.TokenService)},
+			"GetTestDBByID":  {middleware.JWT(params.TokenService)},
+			"UpdateTestDB":   {middleware.JWT(params.TokenService)},
+			"DeleteTestDB":   {middleware.JWT(params.TokenService)},
+			"GetActions":     {middleware.JWT(params.TokenService)},
+			"CreateRole":     {middleware.JWT(params.TokenService)},
+			"UpdateRole":     {middleware.JWT(params.TokenService)},
+			"SetRoleActions": {middleware.JWT(params.TokenService)},
+			"AssignUserRole": {middleware.JWT(params.TokenService)},
 		},
 	})
 	registerSwaggerRoutes(e)

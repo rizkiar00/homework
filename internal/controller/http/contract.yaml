@@ -114,6 +114,150 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /actions:
+    get:
+      tags:
+        - access
+      operationId: GetActions
+      summary: Get all available API actions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Action list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionListAPIResponse"
+  /roles:
+    post:
+      tags:
+        - access
+      operationId: CreateRole
+      summary: Create role and optional access mapping
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+      responses:
+        "201":
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAPIResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /roles/{role_id}:
+    put:
+      tags:
+        - access
+      operationId: UpdateRole
+      summary: Update role and optional access mapping
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoleRequest"
+      responses:
+        "200":
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAPIResponse"
+        "404":
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /roles/{role_id}/actions:
+    put:
+      tags:
+        - access
+      operationId: SetRoleActions
+      summary: Replace action mapping for a role
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetRoleActionsRequest"
+      responses:
+        "200":
+          description: Role actions updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAPIResponse"
+        "404":
+          description: Role or action not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{user_id}/role:
+    put:
+      tags:
+        - access
+      operationId: AssignUserRole
+      summary: Assign a role to a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignUserRoleRequest"
+      responses:
+        "200":
+          description: User role assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "404":
+          description: User or role not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /test_db:
     post:
       tags:
@@ -363,6 +507,140 @@ components:
           example: success
         data:
           $ref: "#/components/schemas/LoginResponse"
+    ActionResponse:
+      type: object
+      required:
+        - action_id
+        - action_desc
+        - action_type
+        - endpoint
+      properties:
+        action_id:
+          type: integer
+          format: int64
+          example: 1
+        action_desc:
+          type: string
+          example: Get test DB list
+        action_type:
+          type: string
+          example: GET
+        endpoint:
+          type: string
+          example: /test_db
+    ActionListAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionResponse"
+    CreateRoleRequest:
+      type: object
+      required:
+        - role_desc
+      properties:
+        role_desc:
+          type: string
+          example: admin
+        action_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example:
+            - 1
+            - 2
+    UpdateRoleRequest:
+      type: object
+      properties:
+        role_desc:
+          type: string
+          example: operator
+        is_active:
+          type: boolean
+          example: true
+        action_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example:
+            - 1
+            - 2
+    SetRoleActionsRequest:
+      type: object
+      required:
+        - action_ids
+      properties:
+        action_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example:
+            - 1
+            - 2
+    AssignUserRoleRequest:
+      type: object
+      required:
+        - role_id
+      properties:
+        role_id:
+          type: integer
+          format: int64
+          example: 1
+    RoleResponse:
+      type: object
+      required:
+        - role_id
+        - role_desc
+        - is_active
+      properties:
+        role_id:
+          type: integer
+          format: int64
+          example: 1
+        role_desc:
+          type: string
+          example: admin
+        is_active:
+          type: boolean
+          example: true
+        action_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionResponse"
+    RoleAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/RoleResponse"
     HealthResponse:
       type: object
       required:
