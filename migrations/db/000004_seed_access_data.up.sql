@@ -28,16 +28,22 @@ SELECT setval(pg_get_serial_sequence('public.roles', 'role_id'), (SELECT MAX(rol
 
 INSERT INTO public.role_accesses (role_access_id, role_id, action_id, created_at)
 VALUES
-	('00000000-0000-0000-0000-000000000001', 1, 1, now()),
-	('00000000-0000-0000-0000-000000000002', 1, 2, now()),
-	('00000000-0000-0000-0000-000000000003', 1, 3, now()),
-	('00000000-0000-0000-0000-000000000004', 1, 4, now()),
-	('00000000-0000-0000-0000-000000000005', 1, 5, now()),
-	('00000000-0000-0000-0000-000000000006', 1, 6, now()),
-	('00000000-0000-0000-0000-000000000007', 1, 7, now()),
-	('00000000-0000-0000-0000-000000000008', 1, 8, now()),
-	('00000000-0000-0000-0000-000000000009', 1, 9, now()),
-	('00000000-0000-0000-0000-000000000010', 1, 10, now()),
-	('00000000-0000-0000-0000-000000000011', 1, 11, now()),
-	('00000000-0000-0000-0000-000000000012', 2, 1, now())
+	(gen_random_uuid(), 1, 1, now()),
+	(gen_random_uuid(), 1, 2, now()),
+	(gen_random_uuid(), 1, 3, now()),
+	(gen_random_uuid(), 1, 4, now()),
+	(gen_random_uuid(), 1, 5, now()),
+	(gen_random_uuid(), 1, 6, now()),
+	(gen_random_uuid(), 1, 7, now()),
+	(gen_random_uuid(), 1, 8, now()),
+	(gen_random_uuid(), 1, 9, now()),
+	(gen_random_uuid(), 1, 10, now()),
+	(gen_random_uuid(), 1, 11, now()),
+	(gen_random_uuid(), 2, 1, now())
 ON CONFLICT (role_id, action_id) DO NOTHING;
+
+UPDATE public.users
+SET role_id = 2,
+	updated_at = now()
+WHERE role_id IS NULL
+	AND role = 'user';

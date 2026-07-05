@@ -45,6 +45,7 @@ func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (
 		Username:     request.Username,
 		PasswordHash: string(hash),
 		Role:         constant.RoleUser,
+		RoleID:       int64Pointer(2),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 	})
@@ -56,6 +57,10 @@ func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (
 	}
 
 	return toAuthUserResponse(row), nil
+}
+
+func int64Pointer(value int64) *int64 {
+	return &value
 }
 
 func (u *usecase) Login(ctx context.Context, request model.LoginRequest) (model.LoginResponse, error) {

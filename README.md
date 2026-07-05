@@ -124,6 +124,14 @@ Force a migration version after fixing a dirty migration state:
 go run ./cmd/migrate force -version=1
 ```
 
+Create a local admin user after migrations:
+
+```bash
+go run ./cmd/admin create -username=admin -password=your_password
+```
+
+Do not commit real admin credentials. The command hashes the password with bcrypt before saving it to the local database.
+
 ## Run The App
 
 ```bash

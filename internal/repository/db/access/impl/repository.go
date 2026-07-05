@@ -154,6 +154,27 @@ func (r *repository) AssignUserRole(ctx context.Context, userID string, roleID i
 	})
 }
 
+func (r *repository) HasAccess(ctx context.Context, userID string, method string, endpoint string) (bool, error) {
+	if r.db == nil {
+		return false, errors.New(constant.MessageDatabaseNotConfigured)
+	}
+
+	var count int64
+	err := r.db.WithContext(ctx).
+		Table(constant.TableUsers+" AS users").
+		Joins("JOIN public.roles ON roles.role_id = users.role_id AND roles.is_active = ?", true).
+		Joins("JOIN public.role_accesses ON role_accesses.role_id = roles.role_id").
+		Joins("JOIN public.actions ON actions.action_id = role_accesses.action_id").
+		Where("users.user_id = ? AND users.is_active = ?", userID, true).
+		Where("actions.action_type = ? AND actions.endpoint = ?", method, endpoint).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func replaceRoleActions(ctx context.Context, tx *gorm.DB, roleID int64, actionIDs []int64) ([]entity.Action, error) {
 	actions, err := findActionsByID(ctx, tx, actionIDs)
 	if err != nil {

@@ -12,4 +12,5 @@ type Repository interface {
 	UpdateRole(ctx context.Context, data entity.Role, updateDesc bool, updateActive bool, actionIDs []int64, updateActions bool) (entity.Role, []entity.Action, error)
 	ReplaceRoleActions(ctx context.Context, roleID int64, actionIDs []int64) ([]entity.Action, error)
 	AssignUserRole(ctx context.Context, userID string, roleID int64) error
+	HasAccess(ctx context.Context, userID string, method string, endpoint string) (bool, error)
 }

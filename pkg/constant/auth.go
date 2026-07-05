@@ -9,6 +9,7 @@ const (
 
 const (
 	MessageUnauthorized              = "unauthorized"
+	MessageForbidden                 = "forbidden"
 	MessageInvalidRequestBody        = "invalid request body"
 	MessageInvalidRegisterCredential = "username is required and password minimum length is 8"
 	MessageDataNotFound              = "data not found"

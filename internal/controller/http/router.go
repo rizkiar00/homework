@@ -8,6 +8,7 @@ import (
 	"github.com/rizkiar00/homework/internal/controller/http/health"
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/controller/http/test_db"
+	accessRepo "github.com/rizkiar00/homework/internal/repository/db/access"
 	"github.com/rizkiar00/homework/pkg/config"
 	"github.com/rizkiar00/homework/pkg/token"
 	"github.com/sirupsen/logrus"
@@ -21,6 +22,7 @@ type RouterParams struct {
 	AccessController *access.Controller
 	HealthController *health.Controller
 	TestDBController *test_db.Controller
+	AccessRepository accessRepo.Repository
 	TokenService     *token.Service
 	Logger           *logrus.Logger
 	Config           config.Config
@@ -63,20 +65,27 @@ func NewRouter(params RouterParams) *echo.Echo {
 	}
 	RegisterHandlersWithOptions(e, handler, RegisterHandlersOptions{
 		OperationMiddlewares: map[string][]echo.MiddlewareFunc{
-			"GetMe":          {middleware.JWT(params.TokenService)},
-			"GetTestDBList":  {middleware.JWT(params.TokenService)},
-			"CreateTestDB":   {middleware.JWT(params.TokenService)},
-			"GetTestDBByID":  {middleware.JWT(params.TokenService)},
-			"UpdateTestDB":   {middleware.JWT(params.TokenService)},
-			"DeleteTestDB":   {middleware.JWT(params.TokenService)},
-			"GetActions":     {middleware.JWT(params.TokenService)},
-			"CreateRole":     {middleware.JWT(params.TokenService)},
-			"UpdateRole":     {middleware.JWT(params.TokenService)},
-			"SetRoleActions": {middleware.JWT(params.TokenService)},
-			"AssignUserRole": {middleware.JWT(params.TokenService)},
+			"GetMe":          privateMiddlewares(params.TokenService, params.AccessRepository),
+			"GetTestDBList":  privateMiddlewares(params.TokenService, params.AccessRepository),
+			"CreateTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
+			"GetTestDBByID":  privateMiddlewares(params.TokenService, params.AccessRepository),
+			"UpdateTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
+			"DeleteTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
+			"GetActions":     privateMiddlewares(params.TokenService, params.AccessRepository),
+			"CreateRole":     privateMiddlewares(params.TokenService, params.AccessRepository),
+			"UpdateRole":     privateMiddlewares(params.TokenService, params.AccessRepository),
+			"SetRoleActions": privateMiddlewares(params.TokenService, params.AccessRepository),
+			"AssignUserRole": privateMiddlewares(params.TokenService, params.AccessRepository),
 		},
 	})
 	registerSwaggerRoutes(e)
 
 	return e
+}
+
+func privateMiddlewares(tokenService *token.Service, repo accessRepo.Repository) []echo.MiddlewareFunc {
+	return []echo.MiddlewareFunc{
+		middleware.JWT(tokenService),
+		middleware.ActionAccess(repo),
+	}
 }
