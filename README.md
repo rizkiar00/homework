@@ -72,7 +72,7 @@ APP_HOST=127.0.0.1
 APP_PORT=8081
 
 DB_DRIVER=postgres
-DB_HOST=127.0.0.1
+DB_HOST=auto
 DB_PORT=5432
 DB_NAME=postgres
 DB_USERNAME=postgres
@@ -83,35 +83,38 @@ JWT_SECRET=change-me
 JWT_EXPIRES_IN_SECONDS=3600
 ```
 
-If you run the app from WSL while PostgreSQL is installed on Windows, override `DB_HOST` before running the app:
-
-```bash
-export DB_HOST=$(ip route | awk '/default/ {print $3; exit}')
-```
-
-You can test whether WSL can reach Windows PostgreSQL with:
-
-```bash
-nc -vz "$DB_HOST" 5432
-```
+Use `DB_HOST=auto` for local development. It resolves to the Windows host when running from WSL, and falls back to `127.0.0.1` when running from Windows PowerShell.
 
 ## Database Setup
 
-Run the migration SQL files manually.
-
-Windows PowerShell:
-
-```powershell
-$env:PGPASSWORD="your_password"
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d postgres -w -f "migrations\db\000001_create_test_table.up.sql"
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -h 127.0.0.1 -p 5432 -U postgres -d postgres -w -f "migrations\db\000002_create_users.up.sql"
-```
-
-WSL/Linux:
+Run all pending migrations:
 
 ```bash
-PGPASSWORD=your_password psql -h "$DB_HOST" -p 5432 -U postgres -d postgres -f migrations/db/000001_create_test_table.up.sql
-PGPASSWORD=your_password psql -h "$DB_HOST" -p 5432 -U postgres -d postgres -f migrations/db/000002_create_users.up.sql
+go run ./cmd/migrate up
+```
+
+Run one migration step up:
+
+```bash
+go run ./cmd/migrate up -steps=1
+```
+
+Rollback one migration step:
+
+```bash
+go run ./cmd/migrate down
+```
+
+Check current migration version:
+
+```bash
+go run ./cmd/migrate version
+```
+
+Force a migration version after fixing a dirty migration state:
+
+```bash
+go run ./cmd/migrate force -version=1
 ```
 
 ## Run The App
