@@ -25,3 +25,6 @@ go.work
 
 # Local Go build cache
 .gocache/
+
+# Local logs
+logs/

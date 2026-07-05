@@ -2,10 +2,12 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/rizkiar00/homework/internal/controller/http/auth"
 	"github.com/rizkiar00/homework/internal/controller/http/health"
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/controller/http/test_db"
+	"github.com/rizkiar00/homework/pkg/config"
 	"github.com/rizkiar00/homework/pkg/token"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
@@ -19,6 +21,7 @@ type RouterParams struct {
 	TestDBController *test_db.Controller
 	TokenService     *token.Service
 	Logger           *logrus.Logger
+	Config           config.Config
 }
 
 func Register(container *dig.Container) error {
@@ -43,6 +46,9 @@ func NewRouter(params RouterParams) *echo.Echo {
 	e.Use(middleware.RequestID())
 	e.Use(middleware.RequestLogger(params.Logger))
 	e.Use(middleware.Recover(params.Logger))
+	e.Use(echoMiddleware.CORSWithConfig(middleware.CORS(params.Config.HTTP)))
+	e.Use(echoMiddleware.SecureWithConfig(middleware.Secure()))
+	e.Use(echoMiddleware.ContextTimeoutWithConfig(middleware.Timeout(params.Config.HTTP)))
 
 	handler := &APIHandler{
 		AuthController:   params.AuthController,

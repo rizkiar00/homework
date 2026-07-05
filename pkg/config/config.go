@@ -8,7 +8,9 @@ import (
 type Config struct {
 	AppConfig AppConfig
 	Database  DatabaseConfig
+	HTTP      HTTPConfig
 	JWT       JWTConfig
+	Log       LogConfig
 }
 
 func New() (Config, error) {
