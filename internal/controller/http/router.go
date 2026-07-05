@@ -7,6 +7,7 @@ import (
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/controller/http/test_db"
 	"github.com/rizkiar00/homework/pkg/token"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/dig"
 )
 
@@ -17,6 +18,7 @@ type RouterParams struct {
 	HealthController *health.Controller
 	TestDBController *test_db.Controller
 	TokenService     *token.Service
+	Logger           *logrus.Logger
 }
 
 func Register(container *dig.Container) error {
@@ -37,6 +39,10 @@ func Register(container *dig.Container) error {
 func NewRouter(params RouterParams) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = false
+	e.HTTPErrorHandler = middleware.HTTPErrorHandler(params.Logger)
+	e.Use(middleware.RequestID())
+	e.Use(middleware.RequestLogger(params.Logger))
+	e.Use(middleware.Recover(params.Logger))
 
 	handler := &APIHandler{
 		AuthController:   params.AuthController,
