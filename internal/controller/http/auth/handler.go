@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,7 +10,6 @@ import (
 	"github.com/rizkiar00/homework/pkg/constant"
 	httpresponse "github.com/rizkiar00/homework/pkg/response"
 	"github.com/rizkiar00/homework/pkg/token"
-	"gorm.io/gorm"
 )
 
 type Controller struct {
@@ -40,7 +38,7 @@ func (c *Controller) Register(ctx echo.Context) error {
 
 	response, err := c.uc.Register(ctx.Request().Context(), request)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageCreated, response)
@@ -54,7 +52,7 @@ func (c *Controller) Login(ctx echo.Context) error {
 
 	response, err := c.uc.Login(ctx.Request().Context(), request)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
@@ -68,22 +66,8 @@ func (c *Controller) Me(ctx echo.Context) error {
 
 	response, err := c.uc.Me(ctx.Request().Context(), claims.UserID)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
-}
-
-func writeError(ctx echo.Context, err error) error {
-	if errors.Is(err, model.ErrInvalidCredential) {
-		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, err.Error())
-	}
-	if errors.Is(err, model.ErrUsernameAlreadyExists) {
-		return httpresponse.Error(ctx, http.StatusConflict, constant.CodeConflict, err.Error())
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return httpresponse.Error(ctx, http.StatusNotFound, constant.CodeNotFound, constant.MessageDataNotFound)
-	}
-
-	return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 }

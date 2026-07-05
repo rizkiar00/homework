@@ -8,9 +8,10 @@ const (
 )
 
 const (
-	MessageUnauthorized          = "unauthorized"
-	MessageInvalidRequestBody    = "invalid request body"
-	MessageDataNotFound          = "data not found"
-	MessageInvalidAuthCredential = "invalid username or password"
-	MessageUsernameAlreadyExists = "username already exists"
+	MessageUnauthorized              = "unauthorized"
+	MessageInvalidRequestBody        = "invalid request body"
+	MessageInvalidRegisterCredential = "username is required and password minimum length is 8"
+	MessageDataNotFound              = "data not found"
+	MessageInvalidAuthCredential     = "invalid username or password"
+	MessageUsernameAlreadyExists     = "username already exists"
 )

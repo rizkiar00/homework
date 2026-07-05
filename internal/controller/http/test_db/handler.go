@@ -1,19 +1,17 @@
 package test_db
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/model"
 	testDBUsecase "github.com/rizkiar00/homework/internal/usecase/test_db"
 	"github.com/rizkiar00/homework/pkg/constant"
+	"github.com/rizkiar00/homework/pkg/customerror"
 	httpresponse "github.com/rizkiar00/homework/pkg/response"
 	"github.com/rizkiar00/homework/pkg/token"
-	"gorm.io/gorm"
 )
 
 type Controller struct {
@@ -45,7 +43,7 @@ func (c *Controller) Create(ctx echo.Context) error {
 
 	response, err := c.uc.Create(ctx.Request().Context(), request)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageCreated, response)
@@ -54,12 +52,12 @@ func (c *Controller) Create(ctx echo.Context) error {
 func (c *Controller) FindAll(ctx echo.Context) error {
 	request, err := parseListRequest(ctx)
 	if err != nil {
-		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, err.Error())
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	response, err := c.uc.FindAll(ctx.Request().Context(), request)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSONWithMeta(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response.Data, response.Meta)
@@ -68,7 +66,7 @@ func (c *Controller) FindAll(ctx echo.Context) error {
 func (c *Controller) FindByID(ctx echo.Context) error {
 	response, err := c.uc.FindByID(ctx.Request().Context(), ctx.Param("id_test"))
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
@@ -82,7 +80,7 @@ func (c *Controller) Update(ctx echo.Context) error {
 
 	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("id_test"), request)
 	if err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
@@ -90,21 +88,10 @@ func (c *Controller) Update(ctx echo.Context) error {
 
 func (c *Controller) Delete(ctx echo.Context) error {
 	if err := c.uc.Delete(ctx.Request().Context(), ctx.Param("id_test")); err != nil {
-		return writeError(ctx, err)
+		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageDeleted, nil)
-}
-
-func writeError(ctx echo.Context, err error) error {
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return httpresponse.Error(ctx, http.StatusNotFound, constant.CodeNotFound, constant.MessageDataNotFound)
-	}
-	if strings.Contains(err.Error(), constant.MessageInvalidOrderBy) || strings.Contains(err.Error(), constant.MessageInvalidOrderDir) {
-		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, err.Error())
-	}
-
-	return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 }
 
 func parseListRequest(ctx echo.Context) (model.TestDBListRequest, error) {
@@ -134,7 +121,7 @@ func parseIntQuery(ctx echo.Context, name string, defaultValue int) (int, error)
 
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, errors.New(name + " must be a number")
+		return 0, customerror.BadRequest(name + " must be a number")
 	}
 
 	return parsed, nil

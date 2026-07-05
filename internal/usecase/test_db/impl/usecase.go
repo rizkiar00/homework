@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/rizkiar00/homework/internal/model"
 	testDBRepo "github.com/rizkiar00/homework/internal/repository/db/test_db"
 	"github.com/rizkiar00/homework/pkg/constant"
+	"github.com/rizkiar00/homework/pkg/customerror"
 )
 
 type usecase struct {
@@ -132,7 +132,7 @@ func normalizeOrderBy(orderBy string) (string, error) {
 	case constant.OrderByDescTest:
 		return constant.OrderByDescTest, nil
 	default:
-		return "", fmt.Errorf(constant.MessageInvalidOrderBy)
+		return "", customerror.BadRequest(constant.MessageInvalidOrderBy)
 	}
 }
 
@@ -143,6 +143,6 @@ func normalizeOrderDir(orderDir string) (string, error) {
 	case constant.OrderDirDesc:
 		return constant.OrderDirDesc, nil
 	default:
-		return "", fmt.Errorf(constant.MessageInvalidOrderDir)
+		return "", customerror.BadRequest(constant.MessageInvalidOrderDir)
 	}
 }

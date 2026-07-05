@@ -11,6 +11,7 @@ import (
 	"github.com/rizkiar00/homework/internal/model"
 	userRepo "github.com/rizkiar00/homework/internal/repository/db/user"
 	"github.com/rizkiar00/homework/pkg/constant"
+	"github.com/rizkiar00/homework/pkg/customerror"
 	"github.com/rizkiar00/homework/pkg/token"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -31,7 +32,7 @@ func New(repo userRepo.Repository, tokenService *token.Service) *usecase {
 func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (model.AuthUserResponse, error) {
 	request.Username = strings.TrimSpace(request.Username)
 	if request.Username == "" || len(request.Password) < 8 {
-		return model.AuthUserResponse{}, errors.New("username is required and password minimum length is 8")
+		return model.AuthUserResponse{}, customerror.BadRequest(constant.MessageInvalidRegisterCredential)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -48,7 +49,7 @@ func (u *usecase) Register(ctx context.Context, request model.RegisterRequest) (
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "users_username_key") {
-			return model.AuthUserResponse{}, model.ErrUsernameAlreadyExists
+			return model.AuthUserResponse{}, customerror.Conflict(constant.MessageUsernameAlreadyExists)
 		}
 		return model.AuthUserResponse{}, err
 	}
@@ -60,13 +61,13 @@ func (u *usecase) Login(ctx context.Context, request model.LoginRequest) (model.
 	row, err := u.repo.FindByUsername(ctx, strings.TrimSpace(request.Username))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.LoginResponse{}, model.ErrInvalidCredential
+			return model.LoginResponse{}, customerror.Unauthorized(constant.MessageInvalidAuthCredential)
 		}
 		return model.LoginResponse{}, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(row.PasswordHash), []byte(request.Password)); err != nil {
-		return model.LoginResponse{}, model.ErrInvalidCredential
+		return model.LoginResponse{}, customerror.Unauthorized(constant.MessageInvalidAuthCredential)
 	}
 
 	accessToken, expiresIn, err := u.tokenService.Generate(row.IDUser, row.Username, row.Role)
