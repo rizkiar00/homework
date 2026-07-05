@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	healthUsecase "github.com/rizkiar00/homework/internal/usecase/health"
 	"github.com/rizkiar00/homework/pkg/constant"
+	httpresponse "github.com/rizkiar00/homework/pkg/response"
 )
 
 type Controller struct {
@@ -24,26 +25,26 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 func (c *Controller) Health(ctx echo.Context) error {
 	res, err := c.uc.Health(ctx.Request().Context())
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, res)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, res)
 }
 
 func (c *Controller) Readiness(ctx echo.Context) error {
 	res, err := c.uc.Readiness(ctx.Request().Context())
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 	}
 
 	status := http.StatusOK
+	code := constant.CodeSuccess
+	message := constant.MessageSuccess
 	if res.Status != constant.StatusReady {
 		status = http.StatusServiceUnavailable
+		code = constant.CodeServiceUnavailable
+		message = constant.MessageServiceUnavailable
 	}
 
-	return ctx.JSON(status, res)
+	return httpresponse.JSON(ctx, status, code, message, res)
 }

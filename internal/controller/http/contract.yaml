@@ -14,6 +14,10 @@ paths:
       responses:
         "200":
           description: Application is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthAPIResponse"
   /readiness:
     get:
       tags:
@@ -23,8 +27,16 @@ paths:
       responses:
         "200":
           description: Application is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessAPIResponse"
         "503":
           description: Application is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessAPIResponse"
   /auth/register:
     post:
       tags:
@@ -43,11 +55,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthUserResponse"
+                $ref: "#/components/schemas/AuthUserAPIResponse"
         "400":
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/login:
     post:
       tags:
@@ -66,9 +86,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LoginResponse"
+                $ref: "#/components/schemas/LoginAPIResponse"
         "401":
           description: Invalid username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/me:
     get:
       tags:
@@ -83,9 +107,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthUserResponse"
+                $ref: "#/components/schemas/AuthUserAPIResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /test_db:
     post:
       tags:
@@ -106,7 +134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TestDBResponse"
+                $ref: "#/components/schemas/TestDBAPIResponse"
     get:
       tags:
         - test_db
@@ -161,6 +189,10 @@ paths:
                 $ref: "#/components/schemas/TestDBListResponse"
         "400":
           description: Invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /test_db/{id_test}:
     get:
       tags:
@@ -182,9 +214,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TestDBResponse"
+                $ref: "#/components/schemas/TestDBAPIResponse"
         "404":
           description: Row not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     put:
       tags:
         - test_db
@@ -211,9 +247,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TestDBResponse"
+                $ref: "#/components/schemas/TestDBAPIResponse"
         "404":
           description: Row not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       tags:
         - test_db
@@ -229,10 +269,18 @@ paths:
             type: string
             format: uuid
       responses:
-        "204":
+        "200":
           description: Row deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
         "404":
           description: Row not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
@@ -270,6 +318,21 @@ components:
         role:
           type: string
           example: user
+    AuthUserAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/AuthUserResponse"
     LoginResponse:
       type: object
       required:
@@ -285,6 +348,91 @@ components:
         expires_in:
           type: integer
           example: 3600
+    LoginAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/LoginResponse"
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - env
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: homework
+        env:
+          type: string
+          example: local
+    ReadinessResponse:
+      type: object
+      required:
+        - status
+        - checks
+      properties:
+        status:
+          type: string
+          example: ready
+        checks:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ReadinessCheck"
+    ReadinessCheck:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ready
+        message:
+          type: string
+          example: database configuration is present
+    HealthAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/HealthResponse"
+    ReadinessAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/ReadinessResponse"
     TestDBRequest:
       type: object
       properties:
@@ -302,12 +450,35 @@ components:
         desc_test:
           type: string
           nullable: true
+    TestDBAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+        - data
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
+        data:
+          $ref: "#/components/schemas/TestDBResponse"
     TestDBListResponse:
       type: object
       required:
+        - code
+        - message
         - data
         - meta
       properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: success
         data:
           type: array
           items:
@@ -343,3 +514,27 @@ components:
         order_dir:
           type: string
           example: asc
+    EmptyAPIResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: SUCCESS
+        message:
+          type: string
+          example: deleted
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: ERR_BAD_REQUEST
+        message:
+          type: string
+          example: invalid request body

@@ -9,6 +9,7 @@ import (
 	"github.com/rizkiar00/homework/internal/model"
 	authUsecase "github.com/rizkiar00/homework/internal/usecase/auth"
 	"github.com/rizkiar00/homework/pkg/constant"
+	httpresponse "github.com/rizkiar00/homework/pkg/response"
 	"github.com/rizkiar00/homework/pkg/token"
 	"gorm.io/gorm"
 )
@@ -34,7 +35,7 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 func (c *Controller) Register(ctx echo.Context) error {
 	var request model.RegisterRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
 	response, err := c.uc.Register(ctx.Request().Context(), request)
@@ -42,13 +43,13 @@ func (c *Controller) Register(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusCreated, response)
+	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageCreated, response)
 }
 
 func (c *Controller) Login(ctx echo.Context) error {
 	var request model.LoginRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
 	response, err := c.uc.Login(ctx.Request().Context(), request)
@@ -56,13 +57,13 @@ func (c *Controller) Login(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusOK, response)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
 }
 
 func (c *Controller) Me(ctx echo.Context) error {
 	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
 	if !ok {
-		return ctx.JSON(http.StatusUnauthorized, errorResponse(constant.MessageUnauthorized))
+		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
 	}
 
 	response, err := c.uc.Me(ctx.Request().Context(), claims.UserID)
@@ -70,23 +71,19 @@ func (c *Controller) Me(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusOK, response)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
 }
 
 func writeError(ctx echo.Context, err error) error {
 	if errors.Is(err, model.ErrInvalidCredential) {
-		return ctx.JSON(http.StatusUnauthorized, errorResponse(err.Error()))
+		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, err.Error())
 	}
 	if errors.Is(err, model.ErrUsernameAlreadyExists) {
-		return ctx.JSON(http.StatusConflict, errorResponse(err.Error()))
+		return httpresponse.Error(ctx, http.StatusConflict, constant.CodeConflict, err.Error())
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ctx.JSON(http.StatusNotFound, errorResponse(constant.MessageDataNotFound))
+		return httpresponse.Error(ctx, http.StatusNotFound, constant.CodeNotFound, constant.MessageDataNotFound)
 	}
 
-	return ctx.JSON(http.StatusInternalServerError, errorResponse(err.Error()))
-}
-
-func errorResponse(message string) map[string]string {
-	return map[string]string{"error": message}
+	return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 }

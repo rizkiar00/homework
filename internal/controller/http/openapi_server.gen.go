@@ -65,11 +65,51 @@ type AuthCredentialRequest struct {
 	Username string `json:"username"`
 }
 
+// AuthUserAPIResponse defines model for AuthUserAPIResponse.
+type AuthUserAPIResponse struct {
+	Code    string           `json:"code"`
+	Data    AuthUserResponse `json:"data"`
+	Message string           `json:"message"`
+}
+
 // AuthUserResponse defines model for AuthUserResponse.
 type AuthUserResponse struct {
 	IdUser   openapi_types.UUID `json:"id_user"`
 	Role     string             `json:"role"`
 	Username string             `json:"username"`
+}
+
+// EmptyAPIResponse defines model for EmptyAPIResponse.
+type EmptyAPIResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// ErrorResponse defines model for ErrorResponse.
+type ErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// HealthAPIResponse defines model for HealthAPIResponse.
+type HealthAPIResponse struct {
+	Code    string         `json:"code"`
+	Data    HealthResponse `json:"data"`
+	Message string         `json:"message"`
+}
+
+// HealthResponse defines model for HealthResponse.
+type HealthResponse struct {
+	Env     string `json:"env"`
+	Service string `json:"service"`
+	Status  string `json:"status"`
+}
+
+// LoginAPIResponse defines model for LoginAPIResponse.
+type LoginAPIResponse struct {
+	Code    string        `json:"code"`
+	Data    LoginResponse `json:"data"`
+	Message string        `json:"message"`
 }
 
 // LoginResponse defines model for LoginResponse.
@@ -89,10 +129,38 @@ type PaginationMeta struct {
 	TotalPages int    `json:"total_pages"`
 }
 
+// ReadinessAPIResponse defines model for ReadinessAPIResponse.
+type ReadinessAPIResponse struct {
+	Code    string            `json:"code"`
+	Data    ReadinessResponse `json:"data"`
+	Message string            `json:"message"`
+}
+
+// ReadinessCheck defines model for ReadinessCheck.
+type ReadinessCheck struct {
+	Message *string `json:"message,omitempty"`
+	Status  string  `json:"status"`
+}
+
+// ReadinessResponse defines model for ReadinessResponse.
+type ReadinessResponse struct {
+	Checks map[string]ReadinessCheck `json:"checks"`
+	Status string                    `json:"status"`
+}
+
+// TestDBAPIResponse defines model for TestDBAPIResponse.
+type TestDBAPIResponse struct {
+	Code    string         `json:"code"`
+	Data    TestDBResponse `json:"data"`
+	Message string         `json:"message"`
+}
+
 // TestDBListResponse defines model for TestDBListResponse.
 type TestDBListResponse struct {
-	Data []TestDBResponse `json:"data"`
-	Meta PaginationMeta   `json:"meta"`
+	Code    string           `json:"code"`
+	Data    []TestDBResponse `json:"data"`
+	Message string           `json:"message"`
+	Meta    PaginationMeta   `json:"meta"`
 }
 
 // TestDBRequest defines model for TestDBRequest.
@@ -399,28 +467,33 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"xe/YZQDlmNAe7dD5YP5vAAAA//8=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

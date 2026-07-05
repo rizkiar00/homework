@@ -11,6 +11,7 @@ import (
 	"github.com/rizkiar00/homework/internal/model"
 	testDBUsecase "github.com/rizkiar00/homework/internal/usecase/test_db"
 	"github.com/rizkiar00/homework/pkg/constant"
+	httpresponse "github.com/rizkiar00/homework/pkg/response"
 	"github.com/rizkiar00/homework/pkg/token"
 	"gorm.io/gorm"
 )
@@ -39,7 +40,7 @@ func (c *Controller) RegisterRoutes(e *echo.Echo) {
 func (c *Controller) Create(ctx echo.Context) error {
 	var request model.CreateTestDBRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
 	response, err := c.uc.Create(ctx.Request().Context(), request)
@@ -47,13 +48,13 @@ func (c *Controller) Create(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusCreated, response)
+	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageCreated, response)
 }
 
 func (c *Controller) FindAll(ctx echo.Context) error {
 	request, err := parseListRequest(ctx)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(err.Error()))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, err.Error())
 	}
 
 	response, err := c.uc.FindAll(ctx.Request().Context(), request)
@@ -61,7 +62,7 @@ func (c *Controller) FindAll(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusOK, response)
+	return httpresponse.JSONWithMeta(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response.Data, response.Meta)
 }
 
 func (c *Controller) FindByID(ctx echo.Context) error {
@@ -70,13 +71,13 @@ func (c *Controller) FindByID(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusOK, response)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
 }
 
 func (c *Controller) Update(ctx echo.Context) error {
 	var request model.UpdateTestDBRequest
 	if err := ctx.Bind(&request); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(constant.MessageInvalidRequestBody))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
 	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("id_test"), request)
@@ -84,7 +85,7 @@ func (c *Controller) Update(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.JSON(http.StatusOK, response)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
 }
 
 func (c *Controller) Delete(ctx echo.Context) error {
@@ -92,22 +93,18 @@ func (c *Controller) Delete(ctx echo.Context) error {
 		return writeError(ctx, err)
 	}
 
-	return ctx.NoContent(http.StatusNoContent)
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageDeleted, nil)
 }
 
 func writeError(ctx echo.Context, err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ctx.JSON(http.StatusNotFound, errorResponse(constant.MessageDataNotFound))
+		return httpresponse.Error(ctx, http.StatusNotFound, constant.CodeNotFound, constant.MessageDataNotFound)
 	}
 	if strings.Contains(err.Error(), constant.MessageInvalidOrderBy) || strings.Contains(err.Error(), constant.MessageInvalidOrderDir) {
-		return ctx.JSON(http.StatusBadRequest, errorResponse(err.Error()))
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, err.Error())
 	}
 
-	return ctx.JSON(http.StatusInternalServerError, errorResponse(err.Error()))
-}
-
-func errorResponse(message string) map[string]string {
-	return map[string]string{"error": message}
+	return httpresponse.Error(ctx, http.StatusInternalServerError, constant.CodeInternalServer, err.Error())
 }
 
 func parseListRequest(ctx echo.Context) (model.TestDBListRequest, error) {
