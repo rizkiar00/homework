@@ -7,5 +7,9 @@ func Register(container *dig.Container) error {
 		return err
 	}
 
-	return container.Provide(NewDatabase)
+	if err := container.Provide(NewDatabase); err != nil {
+		return err
+	}
+
+	return container.Provide(NewRedis)
 }

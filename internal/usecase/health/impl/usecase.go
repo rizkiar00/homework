@@ -54,6 +54,24 @@ func (u *usecase) Readiness(ctx context.Context) (model.ReadinessResponse, error
 		}
 	}
 
+	if !u.cfg.Redis.Enabled {
+		checks["redis"] = model.ReadinessCheck{
+			Status:  "skipped",
+			Message: constant.MessageRedisNotConfigured,
+		}
+	} else if err := u.repo.CheckRedis(ctx); err != nil {
+		status = constant.StatusNotReady
+		checks["redis"] = model.ReadinessCheck{
+			Status:  constant.StatusNotReady,
+			Message: err.Error(),
+		}
+	} else {
+		checks["redis"] = model.ReadinessCheck{
+			Status:  constant.StatusOK,
+			Message: constant.MessageRedisConfigIsAvailable,
+		}
+	}
+
 	return model.ReadinessResponse{
 		Status: status,
 		Checks: checks,

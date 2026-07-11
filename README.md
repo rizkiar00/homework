@@ -86,6 +86,14 @@ HTTP_RATE_LIMIT_BURST=60
 HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE=5
 HTTP_AUTH_RATE_LIMIT_BURST=5
 
+REDIS_ENABLED=false
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_USERNAME=
+REDIS_PASSWORD=
+REDIS_DB=0
+REDIS_DIAL_TIMEOUT_SECONDS=5
+
 DB_DRIVER=postgres
 DB_HOST=auto
 DB_PORT=5432
@@ -99,6 +107,8 @@ JWT_EXPIRES_IN_SECONDS=3600
 ```
 
 Use `DB_HOST=auto` for local development. It resolves to the Windows host when running from WSL, and falls back to `127.0.0.1` when running from Windows PowerShell.
+
+Redis is optional. Keep `REDIS_ENABLED=false` when Redis is not needed. Set `REDIS_ENABLED=true` to include Redis in the readiness check.
 
 ## Database Setup
 
@@ -230,3 +240,14 @@ go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config files\c
 - There is no refresh token flow yet.
 - There is no server-side logout token revocation yet.
 - Swagger UI loads assets from the `swagger-ui-dist` CDN, so opening Swagger UI needs internet access.
+- Redis is wired as an optional app resource and is checked by `/readiness` when `REDIS_ENABLED=true`.
+
+## Redis Usage Ideas
+
+Good first use cases for Redis in this project:
+
+- Shared rate limiting when the API runs on more than one instance.
+- JWT logout or token blacklist if the app needs server-side token revocation.
+- Cache for action access, role permissions, and master data that is read often but rarely changes.
+- Temporary values such as OTP, reset password tokens, invite tokens, and short-lived verification data.
+- Lightweight queues for non-critical background tasks before introducing a broker such as RabbitMQ.

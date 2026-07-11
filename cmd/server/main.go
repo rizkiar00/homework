@@ -35,6 +35,7 @@ type appParams struct {
 	Logger *logrus.Logger
 	Router *echo.Echo
 	DB     model.Database
+	Redis  model.Redis
 }
 
 func run(params appParams) error {
@@ -82,6 +83,11 @@ func run(params appParams) error {
 		return err
 	}
 
+	if err := closeRedis(params.Redis); err != nil {
+		params.Logger.WithError(err).Error("redis close failed")
+		return err
+	}
+
 	params.Logger.Info("server stopped gracefully")
 	return nil
 }
@@ -97,4 +103,12 @@ func closeDatabase(db model.Database) error {
 	}
 
 	return sqlDB.Close()
+}
+
+func closeRedis(redis model.Redis) error {
+	if redis == nil {
+		return nil
+	}
+
+	return redis.Close()
 }

@@ -11,6 +11,7 @@ type Config struct {
 	HTTP      HTTPConfig
 	JWT       JWTConfig
 	Log       LogConfig
+	Redis     RedisConfig
 }
 
 func New() (Config, error) {

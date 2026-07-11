@@ -9,11 +9,15 @@ import (
 )
 
 type repository struct {
-	db model.Database
+	db    model.Database
+	redis model.Redis
 }
 
-func New(db model.Database) *repository {
-	return &repository{db: db}
+func New(db model.Database, redis model.Redis) *repository {
+	return &repository{
+		db:    db,
+		redis: redis,
+	}
 }
 
 func (r *repository) Check(ctx context.Context) error {
@@ -31,4 +35,16 @@ func (r *repository) Check(ctx context.Context) error {
 	}
 
 	return sqlDB.PingContext(ctx)
+}
+
+func (r *repository) CheckRedis(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	if r.redis == nil {
+		return errors.New(constant.MessageRedisNotConfigured)
+	}
+
+	return r.redis.Ping(ctx).Err()
 }

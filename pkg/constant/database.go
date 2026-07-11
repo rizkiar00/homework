@@ -3,6 +3,8 @@ package constant
 const (
 	MessageDatabaseNotConfigured     = "database is not configured"
 	MessageDatabaseConfigIsAvailable = "database configuration is present"
+	MessageRedisNotConfigured        = "redis is not configured"
+	MessageRedisConfigIsAvailable    = "redis configuration is present"
 )
 
 const (
