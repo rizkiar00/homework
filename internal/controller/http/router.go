@@ -55,6 +55,8 @@ func NewRouter(params RouterParams) *echo.Echo {
 	e.Use(middleware.Recover(params.Logger))
 	e.Use(echoMiddleware.CORSWithConfig(middleware.CORS(params.Config.HTTP)))
 	e.Use(echoMiddleware.SecureWithConfig(middleware.Secure()))
+	e.Use(echoMiddleware.BodyLimitWithConfig(middleware.BodyLimit(params.Config.HTTP)))
+	e.Use(middleware.RateLimit(params.Config.HTTP.RateLimitRequestsPerMinute, params.Config.HTTP.RateLimitBurst))
 	e.Use(echoMiddleware.ContextTimeoutWithConfig(middleware.Timeout(params.Config.HTTP)))
 
 	handler := &APIHandler{
@@ -65,6 +67,8 @@ func NewRouter(params RouterParams) *echo.Echo {
 	}
 	RegisterHandlersWithOptions(e, handler, RegisterHandlersOptions{
 		OperationMiddlewares: map[string][]echo.MiddlewareFunc{
+			"Register":       authRateLimitMiddleware(params.Config.HTTP),
+			"Login":          authRateLimitMiddleware(params.Config.HTTP),
 			"GetMe":          privateMiddlewares(params.TokenService, params.AccessRepository),
 			"GetTestDBList":  privateMiddlewares(params.TokenService, params.AccessRepository),
 			"CreateTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
@@ -81,6 +85,12 @@ func NewRouter(params RouterParams) *echo.Echo {
 	registerSwaggerRoutes(e)
 
 	return e
+}
+
+func authRateLimitMiddleware(cfg config.HTTPConfig) []echo.MiddlewareFunc {
+	return []echo.MiddlewareFunc{
+		middleware.RateLimit(cfg.AuthRateLimitRequestsPerMinute, cfg.AuthRateLimitBurst),
+	}
 }
 
 func privateMiddlewares(tokenService *token.Service, repo accessRepo.Repository) []echo.MiddlewareFunc {

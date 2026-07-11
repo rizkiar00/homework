@@ -78,6 +78,14 @@ APP_HOST=127.0.0.1
 APP_PORT=8081
 APP_SHUTDOWN_TIMEOUT_SECONDS=10
 
+HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+HTTP_TIMEOUT_SECONDS=30
+HTTP_BODY_LIMIT=1M
+HTTP_RATE_LIMIT_REQUESTS_PER_MINUTE=60
+HTTP_RATE_LIMIT_BURST=60
+HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE=5
+HTTP_AUTH_RATE_LIMIT_BURST=5
+
 DB_DRIVER=postgres
 DB_HOST=auto
 DB_PORT=5432
@@ -168,6 +176,26 @@ http://127.0.0.1:8081/contract.yaml
 ```
 
 For private endpoints, login first, then click `Authorize` in Swagger UI and paste the JWT access token.
+
+## Public API Protection
+
+Swagger stays public so other people can try the API:
+
+```text
+/swagger
+/swagger/index.html
+/contract.yaml
+```
+
+The server applies these request guards:
+
+- Global rate limit: `HTTP_RATE_LIMIT_REQUESTS_PER_MINUTE`, default `60` requests per minute per IP.
+- Auth rate limit: `HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE`, default `5` requests per minute per IP for `POST /auth/register` and `POST /auth/login`.
+- Body limit: `HTTP_BODY_LIMIT`, default `1M`.
+- Request timeout: `HTTP_TIMEOUT_SECONDS`, default `30` seconds.
+
+When the rate limit is exceeded, the API returns `429 Too Many Requests`.
+When the request body is too large, the API returns `413 Payload Too Large`.
 
 ## API Contract
 

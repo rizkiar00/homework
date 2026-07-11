@@ -36,6 +36,12 @@ func HTTPErrorHandler(logger *logrus.Logger) echo.HTTPErrorHandler {
 			code = constant.CodeNotFound
 		case http.StatusConflict:
 			code = constant.CodeConflict
+		case http.StatusRequestEntityTooLarge:
+			code = constant.CodePayloadTooLarge
+			message = constant.MessagePayloadTooLarge
+		case http.StatusTooManyRequests:
+			code = constant.CodeTooManyRequests
+			message = constant.MessageTooManyRequests
 		case http.StatusServiceUnavailable:
 			code = constant.CodeServiceUnavailable
 		}
