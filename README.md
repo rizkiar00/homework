@@ -22,6 +22,7 @@ A Go backend playground built to practice a lightweight version of a work-style 
 - Authentication:
   - `POST /auth/register`
   - `POST /auth/login`
+  - `POST /auth/logout` private
   - `GET /auth/me` private
 - Private `test_db` CRUD:
   - `POST /test_db`
@@ -238,16 +239,30 @@ go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen --config files\c
 
 - Auth uses stateless JWT access tokens.
 - There is no refresh token flow yet.
-- There is no server-side logout token revocation yet.
+- Logout stores the current JWT `jti` in Redis blacklist until the token expires when Redis is enabled.
 - Swagger UI loads assets from the `swagger-ui-dist` CDN, so opening Swagger UI needs internet access.
 - Redis is wired as an optional app resource and is checked by `/readiness` when `REDIS_ENABLED=true`.
 
-## Redis Usage Ideas
+## Redis Usage
 
-Good first use cases for Redis in this project:
+Redis is optional. When `REDIS_ENABLED=false`, the app falls back to local behavior and still works without Redis.
 
-- Shared rate limiting when the API runs on more than one instance.
-- JWT logout or token blacklist if the app needs server-side token revocation.
-- Cache for action access, role permissions, and master data that is read often but rarely changes.
+Current Redis-backed behavior:
+
+- Shared rate limiting across app instances. If Redis is enabled, global and auth rate limit counters are stored in Redis instead of local memory.
+- JWT logout blacklist. `POST /auth/logout` stores the current token `jti` in Redis with TTL until the token expires.
+- Action access cache. Private endpoint permission checks are cached in Redis for a short time and invalidated when role access or user role assignment changes.
+
+Redis persistence can be enabled at the Redis server level. Common options are:
+
+- RDB snapshot: Redis writes point-in-time snapshots to disk. It is simple and fast, but recent writes can be lost if Redis crashes before the next snapshot.
+- AOF append-only file: Redis appends every write command to disk. It has better durability than RDB, but uses more disk I/O and the AOF file can grow until it is rewritten.
+- RDB + AOF: safer than using only memory, but still adds disk usage and operational work.
+
+Persistence is useful for token blacklist data, but it is usually not required for pure cache data. For this project, losing cached action access or rate limit counters is acceptable. Losing token blacklist data means a logged-out JWT could become usable again until it expires, so keep JWT expiry reasonably short or enable Redis persistence in production.
+
+Good next use cases:
+
+- Cache for master data that is read often but rarely changes.
 - Temporary values such as OTP, reset password tokens, invite tokens, and short-lived verification data.
 - Lightweight queues for non-critical background tasks before introducing a broker such as RabbitMQ.

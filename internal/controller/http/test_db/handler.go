@@ -17,17 +17,19 @@ import (
 type Controller struct {
 	uc           testDBUsecase.Usecase
 	tokenService *token.Service
+	blacklist    *token.Blacklist
 }
 
-func NewController(uc testDBUsecase.Usecase, tokenService *token.Service) *Controller {
+func NewController(uc testDBUsecase.Usecase, tokenService *token.Service, blacklist *token.Blacklist) *Controller {
 	return &Controller{
 		uc:           uc,
 		tokenService: tokenService,
+		blacklist:    blacklist,
 	}
 }
 
 func (c *Controller) RegisterRoutes(e *echo.Echo) {
-	group := e.Group("/test_db", middleware.JWT(c.tokenService))
+	group := e.Group("/test_db", middleware.JWT(c.tokenService, c.blacklist))
 	group.POST("", c.Create)
 	group.GET("", c.FindAll)
 	group.GET("/:test_id", c.FindByID)

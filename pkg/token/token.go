@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/rizkiar00/homework/pkg/config"
 )
 
@@ -34,6 +35,7 @@ func (s *Service) Generate(userID, username, role string) (string, int, error) {
 		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
+			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.expiresIn)),
 		},

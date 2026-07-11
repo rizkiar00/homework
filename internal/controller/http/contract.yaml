@@ -93,6 +93,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      operationId: Logout
+      summary: Logout current access token
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/me:
     get:
       tags:

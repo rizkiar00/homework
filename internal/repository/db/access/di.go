@@ -7,7 +7,7 @@ import (
 )
 
 func Register(container *dig.Container) error {
-	return container.Provide(func(db model.Database) Repository {
-		return impl.New(db)
+	return container.Provide(func(db model.Database, redis model.Redis) Repository {
+		return impl.New(db, redis)
 	})
 }

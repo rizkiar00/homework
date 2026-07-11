@@ -13,11 +13,15 @@ import (
 )
 
 type repository struct {
-	db model.Database
+	db    model.Database
+	redis model.Redis
 }
 
-func New(db model.Database) *repository {
-	return &repository{db: db}
+func New(db model.Database, redis model.Redis) *repository {
+	return &repository{
+		db:    db,
+		redis: redis,
+	}
 }
 
 func (r *repository) FindAllActions(ctx context.Context) ([]entity.Action, error) {
@@ -52,6 +56,7 @@ func (r *repository) CreateRole(ctx context.Context, data entity.Role, actionIDs
 		return entity.Role{}, nil, err
 	}
 
+	r.invalidateAllAccessCache(ctx)
 	return data, actions, nil
 }
 
@@ -99,6 +104,9 @@ func (r *repository) UpdateRole(ctx context.Context, data entity.Role, updateDes
 		return entity.Role{}, nil, err
 	}
 
+	if updateActions || updateActive {
+		r.invalidateAllAccessCache(ctx)
+	}
 	return row, actions, nil
 }
 
@@ -122,6 +130,7 @@ func (r *repository) ReplaceRoleActions(ctx context.Context, roleID int64, actio
 		return nil, err
 	}
 
+	r.invalidateAllAccessCache(ctx)
 	return actions, nil
 }
 
@@ -130,7 +139,7 @@ func (r *repository) AssignUserRole(ctx context.Context, userID string, roleID i
 		return errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var role entity.Role
 		if err := tx.Where("role_id = ? AND is_active = ?", roleID, true).First(&role).Error; err != nil {
 			return err
@@ -152,6 +161,12 @@ func (r *repository) AssignUserRole(ctx context.Context, userID string, roleID i
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	r.invalidateUserAccessCache(ctx, userID)
+	return nil
 }
 
 func (r *repository) HasAccess(ctx context.Context, userID string, method string, endpoint string) (bool, error) {
@@ -239,4 +254,33 @@ func uniqueInt64(values []int64) map[int64]struct{} {
 		result[value] = struct{}{}
 	}
 	return result
+}
+
+func (r *repository) invalidateAllAccessCache(ctx context.Context) {
+	r.invalidateAccessCache(ctx, "access:user:*")
+}
+
+func (r *repository) invalidateUserAccessCache(ctx context.Context, userID string) {
+	r.invalidateAccessCache(ctx, "access:user:"+userID+":*")
+}
+
+func (r *repository) invalidateAccessCache(ctx context.Context, pattern string) {
+	if r.redis == nil {
+		return
+	}
+
+	var cursor uint64
+	for {
+		keys, nextCursor, err := r.redis.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return
+		}
+		if len(keys) > 0 {
+			_ = r.redis.Del(ctx, keys...).Err()
+		}
+		if nextCursor == 0 {
+			return
+		}
+		cursor = nextCursor
+	}
 }

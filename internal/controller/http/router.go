@@ -8,6 +8,7 @@ import (
 	"github.com/rizkiar00/homework/internal/controller/http/health"
 	"github.com/rizkiar00/homework/internal/controller/http/middleware"
 	"github.com/rizkiar00/homework/internal/controller/http/test_db"
+	"github.com/rizkiar00/homework/internal/model"
 	accessRepo "github.com/rizkiar00/homework/internal/repository/db/access"
 	"github.com/rizkiar00/homework/pkg/config"
 	"github.com/rizkiar00/homework/pkg/token"
@@ -24,8 +25,10 @@ type RouterParams struct {
 	TestDBController *test_db.Controller
 	AccessRepository accessRepo.Repository
 	TokenService     *token.Service
+	TokenBlacklist   *token.Blacklist
 	Logger           *logrus.Logger
 	Config           config.Config
+	Redis            model.Redis
 }
 
 func Register(container *dig.Container) error {
@@ -56,7 +59,7 @@ func NewRouter(params RouterParams) *echo.Echo {
 	e.Use(echoMiddleware.CORSWithConfig(middleware.CORS(params.Config.HTTP)))
 	e.Use(echoMiddleware.SecureWithConfig(middleware.Secure()))
 	e.Use(echoMiddleware.BodyLimitWithConfig(middleware.BodyLimit(params.Config.HTTP)))
-	e.Use(middleware.RateLimit(params.Config.HTTP.RateLimitRequestsPerMinute, params.Config.HTTP.RateLimitBurst))
+	e.Use(middleware.RateLimit(params.Config.HTTP.RateLimitRequestsPerMinute, params.Config.HTTP.RateLimitBurst, params.Redis, "global"))
 	e.Use(echoMiddleware.ContextTimeoutWithConfig(middleware.Timeout(params.Config.HTTP)))
 
 	handler := &APIHandler{
@@ -67,19 +70,20 @@ func NewRouter(params RouterParams) *echo.Echo {
 	}
 	RegisterHandlersWithOptions(e, handler, RegisterHandlersOptions{
 		OperationMiddlewares: map[string][]echo.MiddlewareFunc{
-			"Register":       authRateLimitMiddleware(params.Config.HTTP),
-			"Login":          authRateLimitMiddleware(params.Config.HTTP),
-			"GetMe":          privateMiddlewares(params.TokenService, params.AccessRepository),
-			"GetTestDBList":  privateMiddlewares(params.TokenService, params.AccessRepository),
-			"CreateTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
-			"GetTestDBByID":  privateMiddlewares(params.TokenService, params.AccessRepository),
-			"UpdateTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
-			"DeleteTestDB":   privateMiddlewares(params.TokenService, params.AccessRepository),
-			"GetActions":     privateMiddlewares(params.TokenService, params.AccessRepository),
-			"CreateRole":     privateMiddlewares(params.TokenService, params.AccessRepository),
-			"UpdateRole":     privateMiddlewares(params.TokenService, params.AccessRepository),
-			"SetRoleActions": privateMiddlewares(params.TokenService, params.AccessRepository),
-			"AssignUserRole": privateMiddlewares(params.TokenService, params.AccessRepository),
+			"Register":       authRateLimitMiddleware(params.Config.HTTP, params.Redis),
+			"Login":          authRateLimitMiddleware(params.Config.HTTP, params.Redis),
+			"Logout":         privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"GetMe":          privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"GetTestDBList":  privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"CreateTestDB":   privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"GetTestDBByID":  privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"UpdateTestDB":   privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"DeleteTestDB":   privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"GetActions":     privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"CreateRole":     privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"UpdateRole":     privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"SetRoleActions": privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
+			"AssignUserRole": privateMiddlewares(params.TokenService, params.TokenBlacklist, params.AccessRepository, params.Redis),
 		},
 	})
 	registerSwaggerRoutes(e)
@@ -87,15 +91,15 @@ func NewRouter(params RouterParams) *echo.Echo {
 	return e
 }
 
-func authRateLimitMiddleware(cfg config.HTTPConfig) []echo.MiddlewareFunc {
+func authRateLimitMiddleware(cfg config.HTTPConfig, redis model.Redis) []echo.MiddlewareFunc {
 	return []echo.MiddlewareFunc{
-		middleware.RateLimit(cfg.AuthRateLimitRequestsPerMinute, cfg.AuthRateLimitBurst),
+		middleware.RateLimit(cfg.AuthRateLimitRequestsPerMinute, cfg.AuthRateLimitBurst, redis, "auth"),
 	}
 }
 
-func privateMiddlewares(tokenService *token.Service, repo accessRepo.Repository) []echo.MiddlewareFunc {
+func privateMiddlewares(tokenService *token.Service, blacklist *token.Blacklist, repo accessRepo.Repository, redis model.Redis) []echo.MiddlewareFunc {
 	return []echo.MiddlewareFunc{
-		middleware.JWT(tokenService),
-		middleware.ActionAccess(repo),
+		middleware.JWT(tokenService, blacklist),
+		middleware.ActionAccess(repo, redis),
 	}
 }

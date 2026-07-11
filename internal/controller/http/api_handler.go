@@ -20,6 +20,10 @@ func (h *APIHandler) Login(ctx echo.Context) error {
 	return h.AuthController.Login(ctx)
 }
 
+func (h *APIHandler) Logout(ctx echo.Context) error {
+	return h.AuthController.Logout(ctx)
+}
+
 func (h *APIHandler) GetMe(ctx echo.Context) error {
 	return h.AuthController.Me(ctx)
 }

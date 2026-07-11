@@ -20,12 +20,14 @@ import (
 type usecase struct {
 	repo         userRepo.Repository
 	tokenService *token.Service
+	blacklist    *token.Blacklist
 }
 
-func New(repo userRepo.Repository, tokenService *token.Service) *usecase {
+func New(repo userRepo.Repository, tokenService *token.Service, blacklist *token.Blacklist) *usecase {
 	return &usecase{
 		repo:         repo,
 		tokenService: tokenService,
+		blacklist:    blacklist,
 	}
 }
 
@@ -86,6 +88,10 @@ func (u *usecase) Login(ctx context.Context, request model.LoginRequest) (model.
 		TokenType:   constant.TokenTypeBearer,
 		ExpiresIn:   expiresIn,
 	}, nil
+}
+
+func (u *usecase) Logout(ctx context.Context, claims token.Claims) error {
+	return u.blacklist.Revoke(ctx, claims)
 }
 
 func (u *usecase) Me(ctx context.Context, userID string) (model.AuthUserResponse, error) {

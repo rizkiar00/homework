@@ -8,7 +8,7 @@ import (
 )
 
 func Register(container *dig.Container) error {
-	return container.Provide(func(repo userRepo.Repository, tokenService *token.Service) Usecase {
-		return impl.New(repo, tokenService)
+	return container.Provide(func(repo userRepo.Repository, tokenService *token.Service, blacklist *token.Blacklist) Usecase {
+		return impl.New(repo, tokenService, blacklist)
 	})
 }

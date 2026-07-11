@@ -7,7 +7,7 @@ import (
 )
 
 func Register(container *dig.Container) error {
-	return container.Provide(func(uc testDBUsecase.Usecase, tokenService *token.Service) *Controller {
-		return NewController(uc, tokenService)
+	return container.Provide(func(uc testDBUsecase.Usecase, tokenService *token.Service, blacklist *token.Blacklist) *Controller {
+		return NewController(uc, tokenService, blacklist)
 	})
 }

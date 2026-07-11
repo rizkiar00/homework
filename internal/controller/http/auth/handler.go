@@ -15,19 +15,22 @@ import (
 type Controller struct {
 	uc           authUsecase.Usecase
 	tokenService *token.Service
+	blacklist    *token.Blacklist
 }
 
-func NewController(uc authUsecase.Usecase, tokenService *token.Service) *Controller {
+func NewController(uc authUsecase.Usecase, tokenService *token.Service, blacklist *token.Blacklist) *Controller {
 	return &Controller{
 		uc:           uc,
 		tokenService: tokenService,
+		blacklist:    blacklist,
 	}
 }
 
 func (c *Controller) RegisterRoutes(e *echo.Echo) {
 	e.POST("/auth/register", c.Register)
 	e.POST("/auth/login", c.Login)
-	e.GET("/auth/me", c.Me, middleware.JWT(c.tokenService))
+	e.POST("/auth/logout", c.Logout, middleware.JWT(c.tokenService, c.blacklist))
+	e.GET("/auth/me", c.Me, middleware.JWT(c.tokenService, c.blacklist))
 }
 
 func (c *Controller) Register(ctx echo.Context) error {
@@ -70,4 +73,17 @@ func (c *Controller) Me(ctx echo.Context) error {
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, response)
+}
+
+func (c *Controller) Logout(ctx echo.Context) error {
+	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
+	if !ok {
+		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
+	}
+
+	if err := c.uc.Logout(ctx.Request().Context(), claims); err != nil {
+		return httpresponse.CustomError(ctx, err)
+	}
+
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageSuccess, nil)
 }

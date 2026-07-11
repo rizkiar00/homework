@@ -12,7 +12,7 @@ import (
 
 const UserClaimsKey = constant.ContextUserClaimsKey
 
-func JWT(tokenService *token.Service) echo.MiddlewareFunc {
+func JWT(tokenService *token.Service, blacklist *token.Blacklist) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			header := ctx.Request().Header.Get(echo.HeaderAuthorization)
@@ -27,6 +27,9 @@ func JWT(tokenService *token.Service) echo.MiddlewareFunc {
 
 			claims, err := tokenService.Parse(value)
 			if err != nil {
+				return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
+			}
+			if blacklist != nil && blacklist.IsRevoked(ctx.Request().Context(), claims) {
 				return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
 			}
 

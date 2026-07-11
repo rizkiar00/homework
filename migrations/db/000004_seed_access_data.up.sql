@@ -10,7 +10,8 @@ VALUES
 	(8, 'Create role', 'POST', '/roles'),
 	(9, 'Update role', 'PUT', '/roles/{role_id}'),
 	(10, 'Set role actions', 'PUT', '/roles/{role_id}/actions'),
-	(11, 'Assign user role', 'PUT', '/users/{user_id}/role')
+	(11, 'Assign user role', 'PUT', '/users/{user_id}/role'),
+	(12, 'Logout current user', 'POST', '/auth/logout')
 ON CONFLICT (action_type, endpoint) DO UPDATE
 SET action_desc = EXCLUDED.action_desc;
 
@@ -39,6 +40,8 @@ VALUES
 	(gen_random_uuid(), 1, 9, now()),
 	(gen_random_uuid(), 1, 10, now()),
 	(gen_random_uuid(), 1, 11, now()),
+	(gen_random_uuid(), 1, 12, now()),
+	(gen_random_uuid(), 2, 12, now()),
 	(gen_random_uuid(), 2, 1, now())
 ON CONFLICT (role_id, action_id) DO NOTHING;
 
