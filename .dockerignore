@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+.gocache
+.gomodcache
+bin
+logs
+.env
+.env.*
+*.log
+*.test
+*.out
+Dockerfile
+docker-compose.yml
+README.md
+BUILD.md

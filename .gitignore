@@ -22,6 +22,7 @@ go.work
 
 # Local environment variables
 .env
+.env.docker
 
 # Local Go build cache
 .gocache/

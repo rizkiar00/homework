@@ -172,6 +172,47 @@ $env:GOCACHE="E:\Work\homework\.gocache"
 go run ./cmd/server
 ```
 
+## Run With Docker
+
+Create Docker env file:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Build and start the API with PostgreSQL and Redis:
+
+```bash
+docker compose up --build app
+```
+
+Run migrations:
+
+```bash
+docker compose --profile tools run --rm migrate
+```
+
+Create or update a local admin user:
+
+```bash
+docker compose --profile tools run --rm admin /app/admin create -username=admin -password=your_password
+```
+
+Open Swagger:
+
+```text
+http://127.0.0.1:8081/swagger/index.html
+```
+
+The Compose setup uses:
+
+- API container on internal port `8080`, exposed locally as `8081`.
+- PostgreSQL service hostname `postgres`.
+- Redis service hostname `redis`.
+- Redis AOF persistence enabled for local Docker data.
+
+For Cloud Run or other GCP container platforms, set the app to listen on `0.0.0.0` and use environment variables for PostgreSQL, Redis, and JWT secrets. The app supports the platform-provided `PORT` variable when `APP_PORT` is not set.
+
 ## Swagger
 
 Open:
