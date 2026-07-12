@@ -96,18 +96,28 @@ REDIS_DB=0
 REDIS_DIAL_TIMEOUT_SECONDS=5
 
 DB_DRIVER=postgres
+DATABASE_URL=
 DB_HOST=auto
 DB_PORT=5432
 DB_NAME=postgres
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_SCHEMA=public
+DB_SSLMODE=disable
 
 JWT_SECRET=change-me
 JWT_EXPIRES_IN_SECONDS=3600
 ```
 
 Use `DB_HOST=auto` for local development. It resolves to the Windows host when running from WSL, and falls back to `127.0.0.1` when running from Windows PowerShell.
+
+Use `DATABASE_URL` for hosted PostgreSQL providers such as Neon, Supabase, or GCP. When `DATABASE_URL` is set, the app ignores `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SCHEMA`, and `DB_SSLMODE`.
+
+Example hosted PostgreSQL format:
+
+```env
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+```
 
 Redis is optional. Keep `REDIS_ENABLED=false` when Redis is not needed. Set `REDIS_ENABLED=true` to include Redis in the readiness check.
 

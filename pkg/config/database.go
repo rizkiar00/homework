@@ -10,6 +10,7 @@ import (
 )
 
 type DatabaseConfig struct {
+	URL      string `env:"DATABASE_URL"`
 	Name     string `env:"DB_NAME"`
 	Driver   string `env:"DB_DRIVER" envDefault:"postgres"`
 	Host     string `env:"DB_HOST"`
@@ -17,26 +18,44 @@ type DatabaseConfig struct {
 	Username string `env:"DB_USERNAME"`
 	Password string `env:"DB_PASSWORD"`
 	Schema   string `env:"DB_SCHEMA" envDefault:"public"`
+	SSLMode  string `env:"DB_SSLMODE" envDefault:"disable"`
 }
 
 func (c DatabaseConfig) IsConfigured() bool {
+	if strings.TrimSpace(c.URL) != "" {
+		return true
+	}
+
 	return c.Host != "" && c.Name != "" && c.Username != ""
 }
 
 func (c DatabaseConfig) GenerateConnectionString() string {
+	if strings.TrimSpace(c.URL) != "" {
+		return c.URL
+	}
+
 	if !c.IsConfigured() {
 		return ""
 	}
 
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?search_path=%s&sslmode=disable&connect_timeout=5",
+		"postgres://%s:%s@%s:%d/%s?search_path=%s&sslmode=%s&connect_timeout=5",
 		c.Username,
 		c.Password,
 		c.ResolveHost(),
 		c.Port,
 		c.Name,
 		c.Schema,
+		c.SSLModeValue(),
 	)
+}
+
+func (c DatabaseConfig) SSLModeValue() string {
+	if strings.TrimSpace(c.SSLMode) == "" {
+		return "disable"
+	}
+
+	return c.SSLMode
 }
 
 func (c DatabaseConfig) ResolveHost() string {
