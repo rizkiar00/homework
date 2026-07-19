@@ -2,12 +2,24 @@
 
 A Go backend playground built to practice a lightweight version of a work-style backend architecture. The project uses Echo, a simple Clean Architecture layout, PostgreSQL through GORM, JWT authentication, Swagger UI, and a private CRUD example for `test_table`.
 
+## Live Deployment
+
+The project is deployed on Google Cloud Platform using Cloud Run.
+
+```text
+https://rizkistarter.com/swagger
+```
+
+The deployed database uses PostgreSQL on Neon Free Tier. The production deployment uses `DATABASE_URL` for the hosted PostgreSQL connection, while local development can still use a local PostgreSQL instance through `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD`.
+
 ## Tech Stack
 
 - Go
 - Echo (`github.com/labstack/echo/v4`)
 - GORM with PostgreSQL driver
 - PostgreSQL
+- Google Cloud Run for deployment
+- Neon PostgreSQL Free Tier for the deployed database
 - JWT (`github.com/golang-jwt/jwt/v5`)
 - bcrypt for password hashing
 - `dig` for dependency injection
@@ -229,6 +241,12 @@ Open:
 
 ```text
 http://127.0.0.1:8081/swagger/index.html
+```
+
+Live Swagger:
+
+```text
+https://rizkistarter.com/swagger
 ```
 
 OpenAPI contract:
