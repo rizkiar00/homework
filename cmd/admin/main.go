@@ -43,6 +43,8 @@ func run() error {
 func createAdmin(args []string) error {
 	flags := flag.NewFlagSet("create", flag.ExitOnError)
 	username := flags.String("username", "", "admin username")
+	email := flags.String("email", "", "admin email")
+	fullName := flags.String("full-name", "", "admin full name")
 	password := flags.String("password", "", "admin password")
 	if err := flags.Parse(args); err != nil {
 		return err
@@ -51,6 +53,14 @@ func createAdmin(args []string) error {
 	*username = strings.TrimSpace(*username)
 	if *username == "" {
 		return errors.New("username is required")
+	}
+	*email = strings.ToLower(strings.TrimSpace(*email))
+	if *email == "" {
+		*email = *username + "@local.invalid"
+	}
+	*fullName = strings.TrimSpace(*fullName)
+	if *fullName == "" {
+		*fullName = *username
 	}
 	if len(*password) < 8 {
 		return errors.New("password minimum length is 8")
@@ -76,13 +86,17 @@ func createAdmin(args []string) error {
 
 	now := time.Now()
 	data := entity.User{
-		UserID:       uuid.NewString(),
-		Username:     *username,
-		PasswordHash: string(hash),
-		Role:         "admin",
-		RoleID:       int64Pointer(adminRoleID),
-		IsActive:     true,
-		CreatedAt:    now,
+		UserID:        uuid.NewString(),
+		FullName:      *fullName,
+		Username:      *username,
+		Email:         *email,
+		PasswordHash:  string(hash),
+		Role:          "admin",
+		RoleID:        int64Pointer(adminRoleID),
+		IsActive:      true,
+		EmailVerified: true,
+		VerifiedAt:    &now,
+		CreatedAt:     now,
 	}
 
 	err = db.Transaction(func(tx *gorm.DB) error {
@@ -96,11 +110,15 @@ func createAdmin(args []string) error {
 			return tx.Model(&entity.User{}).
 				Where("user_id = ?", existing.UserID).
 				Updates(map[string]interface{}{
-					"password_hash": data.PasswordHash,
-					"role":          data.Role,
-					"role_id":       data.RoleID,
-					"is_active":     true,
-					"updated_at":    now,
+					"password_hash":  data.PasswordHash,
+					"full_name":      data.FullName,
+					"email":          data.Email,
+					"role":           data.Role,
+					"role_id":        data.RoleID,
+					"is_active":      true,
+					"email_verified": true,
+					"verified_at":    now,
+					"updated_at":     now,
 				}).Error
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
@@ -122,5 +140,5 @@ func int64Pointer(value int64) *int64 {
 
 func printUsage() {
 	fmt.Fprintln(os.Stderr, "usage:")
-	fmt.Fprintln(os.Stderr, "  go run ./cmd/admin create -username=admin -password=your_password")
+	fmt.Fprintln(os.Stderr, "  go run ./cmd/admin create -username=admin -email=admin@example.com -full-name=Admin -password=your_password")
 }

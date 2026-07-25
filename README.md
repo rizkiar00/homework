@@ -33,6 +33,10 @@ The deployed database uses PostgreSQL on Neon Free Tier. The production deployme
   - `GET /readiness`
 - Authentication:
   - `POST /auth/register`
+  - `POST /auth/verify-email`
+  - `POST /auth/resend-verification`
+  - `POST /auth/forgot-password`
+  - `POST /auth/reset-password`
   - `POST /auth/login`
   - `POST /auth/logout` private
   - `GET /auth/me` private
@@ -82,44 +86,14 @@ The active server is `cmd/server/main.go`. HTTP routes are registered from `inte
 
 ## Environment Setup
 
-Create `.env` from `.env.example`, then adjust it for your machine.
+Create `.env` from `.env.example`, then adjust it for your machine:
 
-```env
-APP_NAME=homework-api
-APP_ENV=local
-APP_HOST=127.0.0.1
-APP_PORT=8081
-APP_SHUTDOWN_TIMEOUT_SECONDS=10
-
-HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-HTTP_TIMEOUT_SECONDS=30
-HTTP_BODY_LIMIT=1M
-HTTP_RATE_LIMIT_REQUESTS_PER_MINUTE=60
-HTTP_RATE_LIMIT_BURST=60
-HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE=5
-HTTP_AUTH_RATE_LIMIT_BURST=5
-
-REDIS_ENABLED=false
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-REDIS_USERNAME=
-REDIS_PASSWORD=
-REDIS_DB=0
-REDIS_DIAL_TIMEOUT_SECONDS=5
-
-DB_DRIVER=postgres
-DATABASE_URL=
-DB_HOST=auto
-DB_PORT=5432
-DB_NAME=postgres
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-DB_SCHEMA=public
-DB_SSLMODE=disable
-
-JWT_SECRET=change-me
-JWT_EXPIRES_IN_SECONDS=3600
+```bash
+cp .env.example .env
 ```
+
+The complete environment variable template is maintained in `.env.example`.
+Do not commit real secret values such as `DATABASE_URL`, `JWT_SECRET`, `RESEND_API_KEY`, database passwords, or Redis passwords.
 
 Use `DB_HOST=auto` for local development. It resolves to the Windows host when running from WSL, and falls back to `127.0.0.1` when running from Windows PowerShell.
 
@@ -132,6 +106,8 @@ DATABASE_URL=postgresql://user:password@host/database?sslmode=require
 ```
 
 Redis is optional. Keep `REDIS_ENABLED=false` when Redis is not needed. Set `REDIS_ENABLED=true` to include Redis in the readiness check.
+
+Email is used for registration verification. The default provider is Resend. Keep `RESEND_API_KEY` out of git and configure it through local `.env`, Docker env, Cloud Run environment variables, or Secret Manager.
 
 ## Database Setup
 
@@ -168,10 +144,87 @@ go run ./cmd/migrate force -version=1
 Create a local admin user after migrations:
 
 ```bash
-go run ./cmd/admin create -username=admin -password=your_password
+go run ./cmd/admin create -username=admin -email=admin@example.com -full-name=Admin -password=your_password
 ```
 
 Do not commit real admin credentials. The command hashes the password with bcrypt before saving it to the local database.
+
+## Registration Verification Flow
+
+Public user registration requires email verification:
+
+```text
+POST /auth/register
+  -> creates or updates a pending user
+  -> stores a hashed verification code in PostgreSQL
+  -> sends the plain verification code to the user's email through Resend
+
+POST /auth/verify-email
+  -> validates the submitted code
+  -> activates the user
+  -> allows login
+
+POST /auth/login
+  -> rejects users whose email is not verified
+```
+
+Register request:
+
+```json
+{
+  "full_name": "Rizki Achmad",
+  "username": "rizki",
+  "email": "rizki@example.com",
+  "password": "password123"
+}
+```
+
+Verify request:
+
+```json
+{
+  "email": "rizki@example.com",
+  "code": "482193"
+}
+```
+
+If a pending user registers again with the same email, the app reuses that pending user and sends a new verification code instead of creating a duplicate account.
+
+## Reset Password Flow
+
+Public reset password uses an emailed code:
+
+```text
+POST /auth/forgot-password
+  -> accepts an email
+  -> returns a generic success response
+  -> sends a reset password code if the email belongs to an active verified user
+
+POST /auth/reset-password
+  -> validates the submitted code
+  -> hashes the new password with bcrypt
+  -> marks the reset code as used
+```
+
+Forgot password request:
+
+```json
+{
+  "email": "rizki@example.com"
+}
+```
+
+Reset password request:
+
+```json
+{
+  "email": "rizki@example.com",
+  "code": "482193",
+  "new_password": "newPassword123"
+}
+```
+
+The reset code is stored as a hash, expires after 15 minutes, and is limited to 5 failed attempts.
 
 ## Run The App
 
@@ -217,7 +270,7 @@ docker compose --profile tools run --rm migrate
 Create or update a local admin user:
 
 ```bash
-docker compose --profile tools run --rm admin /app/admin create -username=admin -password=your_password
+docker compose --profile tools run --rm admin /app/admin create -username=admin -email=admin@example.com -full-name=Admin -password=your_password
 ```
 
 Open Swagger:
@@ -270,7 +323,9 @@ Swagger stays public so other people can try the API:
 The server applies these request guards:
 
 - Global rate limit: `HTTP_RATE_LIMIT_REQUESTS_PER_MINUTE`, default `60` requests per minute per IP.
-- Auth rate limit: `HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE`, default `5` requests per minute per IP for `POST /auth/register` and `POST /auth/login`.
+- Auth rate limit: `HTTP_AUTH_RATE_LIMIT_REQUESTS_PER_MINUTE`, default `5` requests per minute per IP for public auth endpoints.
+- Email sending limit: max 3 email codes per email within 15 minutes for `POST /auth/register`, `POST /auth/resend-verification`, and `POST /auth/forgot-password`.
+- Email sending cooldown: 60 seconds before the same email can request another code.
 - Body limit: `HTTP_BODY_LIMIT`, default `1M`.
 - Request timeout: `HTTP_TIMEOUT_SECONDS`, default `30` seconds.
 

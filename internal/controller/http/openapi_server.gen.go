@@ -94,9 +94,11 @@ type AuthUserAPIResponse struct {
 
 // AuthUserResponse defines model for AuthUserResponse.
 type AuthUserResponse struct {
-	Role     string             `json:"role"`
-	UserId   openapi_types.UUID `json:"user_id"`
-	Username string             `json:"username"`
+	Email    *openapi_types.Email `json:"email,omitempty"`
+	FullName *string              `json:"full_name,omitempty"`
+	Role     string               `json:"role"`
+	UserId   openapi_types.UUID   `json:"user_id"`
+	Username string               `json:"username"`
 }
 
 // CreateRoleRequest defines model for CreateRoleRequest.
@@ -115,6 +117,11 @@ type EmptyAPIResponse struct {
 type ErrorResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+// ForgotPasswordRequest defines model for ForgotPasswordRequest.
+type ForgotPasswordRequest struct {
+	Email openapi_types.Email `json:"email"`
 }
 
 // HealthAPIResponse defines model for HealthAPIResponse.
@@ -174,6 +181,26 @@ type ReadinessResponse struct {
 	Status string                    `json:"status"`
 }
 
+// RegisterRequest defines model for RegisterRequest.
+type RegisterRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	FullName string              `json:"full_name"`
+	Password string              `json:"password"`
+	Username string              `json:"username"`
+}
+
+// ResendVerificationRequest defines model for ResendVerificationRequest.
+type ResendVerificationRequest struct {
+	Email openapi_types.Email `json:"email"`
+}
+
+// ResetPasswordRequest defines model for ResetPasswordRequest.
+type ResetPasswordRequest struct {
+	Code        string              `json:"code"`
+	Email       openapi_types.Email `json:"email"`
+	NewPassword string              `json:"new_password"`
+}
+
 // RoleAPIResponse defines model for RoleAPIResponse.
 type RoleAPIResponse struct {
 	Code    string       `json:"code"`
@@ -228,6 +255,12 @@ type UpdateRoleRequest struct {
 	RoleDesc  *string  `json:"role_desc,omitempty"`
 }
 
+// VerifyEmailRequest defines model for VerifyEmailRequest.
+type VerifyEmailRequest struct {
+	Code  string              `json:"code"`
+	Email openapi_types.Email `json:"email"`
+}
+
 // bearerAuthContextKey is the context key for bearerAuth security scheme
 type bearerAuthContextKey string
 
@@ -252,11 +285,23 @@ type GetTestDBListParamsOrderBy string
 // GetTestDBListParamsOrderDir defines parameters for GetTestDBList.
 type GetTestDBListParamsOrderDir string
 
+// ForgotPasswordJSONRequestBody defines body for ForgotPassword for application/json ContentType.
+type ForgotPasswordJSONRequestBody = ForgotPasswordRequest
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = AuthCredentialRequest
 
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
-type RegisterJSONRequestBody = AuthCredentialRequest
+type RegisterJSONRequestBody = RegisterRequest
+
+// ResendVerificationJSONRequestBody defines body for ResendVerification for application/json ContentType.
+type ResendVerificationJSONRequestBody = ResendVerificationRequest
+
+// ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
+type ResetPasswordJSONRequestBody = ResetPasswordRequest
+
+// VerifyEmailJSONRequestBody defines body for VerifyEmail for application/json ContentType.
+type VerifyEmailJSONRequestBody = VerifyEmailRequest
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody = CreateRoleRequest
@@ -281,6 +326,9 @@ type ServerInterface interface {
 	// Get all available API actions
 	// (GET /actions)
 	GetActions(ctx echo.Context) error
+	// Request reset password code
+	// (POST /auth/forgot-password)
+	ForgotPassword(ctx echo.Context) error
 	// Login and get access token
 	// (POST /auth/login)
 	Login(ctx echo.Context) error
@@ -293,6 +341,15 @@ type ServerInterface interface {
 	// Register new user
 	// (POST /auth/register)
 	Register(ctx echo.Context) error
+	// Resend email verification code
+	// (POST /auth/resend-verification)
+	ResendVerification(ctx echo.Context) error
+	// Reset password with emailed code
+	// (POST /auth/reset-password)
+	ResetPassword(ctx echo.Context) error
+	// Verify registered user email
+	// (POST /auth/verify-email)
+	VerifyEmail(ctx echo.Context) error
 	// Check application liveness
 	// (GET /health)
 	GetHealth(ctx echo.Context) error
@@ -344,6 +401,15 @@ func (w *ServerInterfaceWrapper) GetActions(ctx echo.Context) error {
 	return err
 }
 
+// ForgotPassword converts echo context to params.
+func (w *ServerInterfaceWrapper) ForgotPassword(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ForgotPassword(ctx)
+	return err
+}
+
 // Login converts echo context to params.
 func (w *ServerInterfaceWrapper) Login(ctx echo.Context) error {
 	var err error
@@ -381,6 +447,33 @@ func (w *ServerInterfaceWrapper) Register(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.Register(ctx)
+	return err
+}
+
+// ResendVerification converts echo context to params.
+func (w *ServerInterfaceWrapper) ResendVerification(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ResendVerification(ctx)
+	return err
+}
+
+// ResetPassword converts echo context to params.
+func (w *ServerInterfaceWrapper) ResetPassword(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ResetPassword(ctx)
+	return err
+}
+
+// VerifyEmail converts echo context to params.
+func (w *ServerInterfaceWrapper) VerifyEmail(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.VerifyEmail(ctx)
 	return err
 }
 
@@ -621,10 +714,14 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 	}
 
 	router.GET(options.BaseURL+"/actions", wrapper.GetActions, options.OperationMiddlewares["GetActions"]...)
+	router.POST(options.BaseURL+"/auth/forgot-password", wrapper.ForgotPassword, options.OperationMiddlewares["ForgotPassword"]...)
 	router.POST(options.BaseURL+"/auth/login", wrapper.Login, options.OperationMiddlewares["Login"]...)
 	router.POST(options.BaseURL+"/auth/logout", wrapper.Logout, options.OperationMiddlewares["Logout"]...)
 	router.GET(options.BaseURL+"/auth/me", wrapper.GetMe, options.OperationMiddlewares["GetMe"]...)
 	router.POST(options.BaseURL+"/auth/register", wrapper.Register, options.OperationMiddlewares["Register"]...)
+	router.POST(options.BaseURL+"/auth/resend-verification", wrapper.ResendVerification, options.OperationMiddlewares["ResendVerification"]...)
+	router.POST(options.BaseURL+"/auth/reset-password", wrapper.ResetPassword, options.OperationMiddlewares["ResetPassword"]...)
+	router.POST(options.BaseURL+"/auth/verify-email", wrapper.VerifyEmail, options.OperationMiddlewares["VerifyEmail"]...)
 	router.GET(options.BaseURL+"/health", wrapper.GetHealth, options.OperationMiddlewares["GetHealth"]...)
 	router.GET(options.BaseURL+"/readiness", wrapper.GetReadiness, options.OperationMiddlewares["GetReadiness"]...)
 	router.POST(options.BaseURL+"/roles", wrapper.CreateRole, options.OperationMiddlewares["CreateRole"]...)
@@ -644,41 +741,47 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

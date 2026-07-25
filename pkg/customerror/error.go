@@ -56,6 +56,10 @@ func Conflict(message string) *Error {
 	return New(constant.CodeConflict, message, http.StatusConflict)
 }
 
+func TooManyRequests(message string) *Error {
+	return New(constant.CodeTooManyRequests, message, http.StatusTooManyRequests)
+}
+
 func Internal(err error) *Error {
 	return Wrap(err, constant.CodeInternalServer, constant.MessageInternalServer, http.StatusInternalServerError)
 }

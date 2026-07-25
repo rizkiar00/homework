@@ -28,6 +28,10 @@ func NewController(uc authUsecase.Usecase, tokenService *token.Service, blacklis
 
 func (c *Controller) RegisterRoutes(e *echo.Echo) {
 	e.POST("/auth/register", c.Register)
+	e.POST("/auth/verify-email", c.VerifyEmail)
+	e.POST("/auth/resend-verification", c.ResendVerification)
+	e.POST("/auth/forgot-password", c.ForgotPassword)
+	e.POST("/auth/reset-password", c.ResetPassword)
 	e.POST("/auth/login", c.Login)
 	e.POST("/auth/logout", c.Logout, middleware.JWT(c.tokenService, c.blacklist))
 	e.GET("/auth/me", c.Me, middleware.JWT(c.tokenService, c.blacklist))
@@ -44,7 +48,59 @@ func (c *Controller) Register(ctx echo.Context) error {
 		return httpresponse.CustomError(ctx, err)
 	}
 
-	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageCreated, response)
+	return httpresponse.JSON(ctx, http.StatusCreated, constant.CodeSuccess, constant.MessageVerificationSubmitted, response)
+}
+
+func (c *Controller) VerifyEmail(ctx echo.Context) error {
+	var request model.VerifyEmailRequest
+	if err := ctx.Bind(&request); err != nil {
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
+	}
+
+	if err := c.uc.VerifyEmail(ctx.Request().Context(), request); err != nil {
+		return httpresponse.CustomError(ctx, err)
+	}
+
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageEmailVerified, nil)
+}
+
+func (c *Controller) ResendVerification(ctx echo.Context) error {
+	var request model.ResendVerificationRequest
+	if err := ctx.Bind(&request); err != nil {
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
+	}
+
+	if err := c.uc.ResendVerification(ctx.Request().Context(), request); err != nil {
+		return httpresponse.CustomError(ctx, err)
+	}
+
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageVerificationSent, nil)
+}
+
+func (c *Controller) ForgotPassword(ctx echo.Context) error {
+	var request model.ForgotPasswordRequest
+	if err := ctx.Bind(&request); err != nil {
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
+	}
+
+	if err := c.uc.ForgotPassword(ctx.Request().Context(), request); err != nil {
+		return httpresponse.CustomError(ctx, err)
+	}
+
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageResetPasswordCodeSent, nil)
+}
+
+func (c *Controller) ResetPassword(ctx echo.Context) error {
+	var request model.ResetPasswordRequest
+	if err := ctx.Bind(&request); err != nil {
+		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
+	}
+
+	if err := c.uc.ResetPassword(ctx.Request().Context(), request); err != nil {
+		return httpresponse.CustomError(ctx, err)
+	}
+
+	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessagePasswordReset, nil)
 }
 
 func (c *Controller) Login(ctx echo.Context) error {

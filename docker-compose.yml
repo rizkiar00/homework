@@ -32,7 +32,7 @@ services:
     env_file:
       - .env.docker
     entrypoint: []
-    command: ["/app/admin", "create", "-username=admin", "-password=change_this_password"]
+    command: ["/app/admin", "create", "-username=admin", "-email=admin@local.invalid", "-full-name=Admin", "-password=change_this_password"]
     depends_on:
       postgres:
         condition: service_healthy

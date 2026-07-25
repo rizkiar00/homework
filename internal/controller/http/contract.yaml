@@ -48,7 +48,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AuthCredentialRequest"
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
         "201":
           description: User registered
@@ -63,7 +63,107 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
-          description: Username already exists
+          description: Username or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/verify-email:
+    post:
+      tags:
+        - auth
+      operationId: VerifyEmail
+      summary: Verify registered user email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "400":
+          description: Invalid or expired verification code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/resend-verification:
+    post:
+      tags:
+        - auth
+      operationId: ResendVerification
+      summary: Resend email verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendVerificationRequest"
+      responses:
+        "200":
+          description: Verification code sent if the email is pending verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      operationId: ForgotPassword
+      summary: Request reset password code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: Reset password code sent if the email is registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/reset-password:
+    post:
+      tags:
+        - auth
+      operationId: ResetPassword
+      summary: Reset password with emailed code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyAPIResponse"
+        "400":
+          description: Invalid request or reset password code
           content:
             application/json:
               schema:
@@ -453,6 +553,29 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - full_name
+        - username
+        - email
+        - password
+      properties:
+        full_name:
+          type: string
+          example: Rizki Achmad
+        username:
+          type: string
+          example: rizki
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: secret123
     AuthCredentialRequest:
       type: object
       required:
@@ -467,6 +590,60 @@ components:
           format: password
           minLength: 8
           example: secret123
+    VerifyEmailRequest:
+      type: object
+      required:
+        - email
+        - code
+      properties:
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          example: "482193"
+    ResendVerificationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
+    ResetPasswordRequest:
+      type: object
+      required:
+        - email
+        - code
+        - new_password
+      properties:
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          example: "482193"
+        new_password:
+          type: string
+          format: password
+          minLength: 8
+          example: newSecret123
     AuthUserResponse:
       type: object
       required:
@@ -477,9 +654,16 @@ components:
         user_id:
           type: string
           format: uuid
+        full_name:
+          type: string
+          example: Rizki Achmad
         username:
           type: string
           example: rizki
+        email:
+          type: string
+          format: email
+          example: rizki@example.com
         role:
           type: string
           example: user

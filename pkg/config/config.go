@@ -12,6 +12,7 @@ type Config struct {
 	JWT       JWTConfig
 	Log       LogConfig
 	Redis     RedisConfig
+	Email     EmailConfig
 }
 
 func New() (Config, error) {

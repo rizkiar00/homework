@@ -20,6 +20,22 @@ func (h *APIHandler) Login(ctx echo.Context) error {
 	return h.AuthController.Login(ctx)
 }
 
+func (h *APIHandler) VerifyEmail(ctx echo.Context) error {
+	return h.AuthController.VerifyEmail(ctx)
+}
+
+func (h *APIHandler) ResendVerification(ctx echo.Context) error {
+	return h.AuthController.ResendVerification(ctx)
+}
+
+func (h *APIHandler) ForgotPassword(ctx echo.Context) error {
+	return h.AuthController.ForgotPassword(ctx)
+}
+
+func (h *APIHandler) ResetPassword(ctx echo.Context) error {
+	return h.AuthController.ResetPassword(ctx)
+}
+
 func (h *APIHandler) Logout(ctx echo.Context) error {
 	return h.AuthController.Logout(ctx)
 }
