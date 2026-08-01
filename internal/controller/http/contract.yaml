@@ -1,7 +1,15 @@
 openapi: 3.0.3
 info:
   title: Homework API
+  description: |
+    Homework API is a Go backend skeleton project built for practicing a work-style backend architecture.
+    It includes Echo routing, PostgreSQL access through GORM, JWT authentication, role/action based access control, Swagger/OpenAPI, email verification, reset password flow, Redis-ready middleware, migrations, and Docker support.
+
+    GitHub repository: https://github.com/rizkiar00/homework
   version: 1.0.0
+externalDocs:
+  description: GitHub Repository
+  url: https://github.com/rizkiar00/homework
 servers:
   - url: /
 paths:
