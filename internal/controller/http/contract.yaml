@@ -5,13 +5,19 @@ info:
     Homework API is a Go backend skeleton project built for practicing a work-style backend architecture.
     It includes Echo routing, PostgreSQL access through GORM, JWT authentication, role/action based access control, Swagger/OpenAPI, email verification, reset password flow, Redis-ready middleware, migrations, and Docker support.
 
-    GitHub repository: https://github.com/rizkiar00/homework
+    Backend API: https://be.rizkistarter.com
+    Frontend Website: https://rizkistarter.com
+    Backend GitHub: https://github.com/rizkiar00/homework
+    Frontend GitHub: https://github.com/rizkiar00/homework-fe
   version: 1.0.0
 externalDocs:
-  description: GitHub Repository
+  description: Backend GitHub Repository
   url: https://github.com/rizkiar00/homework
 servers:
+  - url: https://be.rizkistarter.com
+    description: Production
   - url: /
+    description: Current host
 paths:
   /health:
     get:

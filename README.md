@@ -6,9 +6,11 @@ A Go backend playground built to practice a lightweight version of a work-style 
 
 The project is deployed on Google Cloud Platform using Cloud Run.
 
-```text
-https://rizkistarter.com/swagger
-```
+- Backend API: `https://be.rizkistarter.com`
+- Backend Swagger: `https://be.rizkistarter.com/swagger`
+- Frontend Website: `https://rizkistarter.com`
+- Backend GitHub: `https://github.com/rizkiar00/homework`
+- Frontend GitHub: `https://github.com/rizkiar00/homework-fe`
 
 The deployed database uses PostgreSQL on Neon Free Tier. The production deployment uses `DATABASE_URL` for the hosted PostgreSQL connection, while local development can still use a local PostgreSQL instance through `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD`.
 
@@ -299,7 +301,7 @@ http://127.0.0.1:8081/swagger/index.html
 Live Swagger:
 
 ```text
-https://rizkistarter.com/swagger
+https://be.rizkistarter.com/swagger
 ```
 
 OpenAPI contract:
