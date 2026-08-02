@@ -41,6 +41,11 @@ VALUES
 	(gen_random_uuid(), 1, 10, now()),
 	(gen_random_uuid(), 1, 11, now()),
 	(gen_random_uuid(), 1, 12, now()),
+	(gen_random_uuid(), 2, 2, now()),
+	(gen_random_uuid(), 2, 3, now()),
+	(gen_random_uuid(), 2, 4, now()),
+	(gen_random_uuid(), 2, 5, now()),
+	(gen_random_uuid(), 2, 6, now()),
 	(gen_random_uuid(), 2, 12, now()),
 	(gen_random_uuid(), 2, 1, now())
 ON CONFLICT (role_id, action_id) DO NOTHING;
