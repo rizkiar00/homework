@@ -447,6 +447,7 @@ paths:
             enum:
               - test_id
               - desc_test
+              - created_at
             default: test_id
           description: Column used for sorting.
         - name: order_dir
@@ -940,6 +941,7 @@ components:
       type: object
       required:
         - test_id
+        - created_at
       properties:
         test_id:
           type: string
@@ -947,6 +949,13 @@ components:
         desc_test:
           type: string
           nullable: true
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
     TestDBAPIResponse:
       type: object
       required:

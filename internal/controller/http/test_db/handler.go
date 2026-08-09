@@ -43,7 +43,12 @@ func (c *Controller) Create(ctx echo.Context) error {
 		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
-	response, err := c.uc.Create(ctx.Request().Context(), request)
+	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
+	if !ok {
+		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
+	}
+
+	response, err := c.uc.Create(ctx.Request().Context(), claims.UserID, request)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}

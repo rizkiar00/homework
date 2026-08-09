@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type CreateTestDBRequest struct {
 	DescTest *string `json:"desc_test"`
 }
@@ -9,8 +11,10 @@ type UpdateTestDBRequest struct {
 }
 
 type TestDBResponse struct {
-	TestID   string  `json:"test_id"`
-	DescTest *string `json:"desc_test"`
+	TestID    string    `json:"test_id"`
+	DescTest  *string   `json:"desc_test"`
+	CreatedBy *string   `json:"created_by"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type TestDBListRequest struct {
