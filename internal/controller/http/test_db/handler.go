@@ -43,9 +43,9 @@ func (c *Controller) Create(ctx echo.Context) error {
 		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
-	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
-	if !ok {
-		return httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
+	claims, err := getClaims(ctx)
+	if err != nil {
+		return err
 	}
 
 	response, err := c.uc.Create(ctx.Request().Context(), claims.UserID, request)
@@ -57,12 +57,17 @@ func (c *Controller) Create(ctx echo.Context) error {
 }
 
 func (c *Controller) FindAll(ctx echo.Context) error {
+	claims, err := getClaims(ctx)
+	if err != nil {
+		return err
+	}
+
 	request, err := parseListRequest(ctx)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
 
-	response, err := c.uc.FindAll(ctx.Request().Context(), request)
+	response, err := c.uc.FindAll(ctx.Request().Context(), claims, request)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
@@ -71,7 +76,12 @@ func (c *Controller) FindAll(ctx echo.Context) error {
 }
 
 func (c *Controller) FindByID(ctx echo.Context) error {
-	response, err := c.uc.FindByID(ctx.Request().Context(), ctx.Param("test_id"))
+	claims, err := getClaims(ctx)
+	if err != nil {
+		return err
+	}
+
+	response, err := c.uc.FindByID(ctx.Request().Context(), claims, ctx.Param("test_id"))
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
@@ -80,12 +90,17 @@ func (c *Controller) FindByID(ctx echo.Context) error {
 }
 
 func (c *Controller) Update(ctx echo.Context) error {
+	claims, err := getClaims(ctx)
+	if err != nil {
+		return err
+	}
+
 	var request model.UpdateTestDBRequest
 	if err := ctx.Bind(&request); err != nil {
 		return httpresponse.Error(ctx, http.StatusBadRequest, constant.CodeBadRequest, constant.MessageInvalidRequestBody)
 	}
 
-	response, err := c.uc.Update(ctx.Request().Context(), ctx.Param("test_id"), request)
+	response, err := c.uc.Update(ctx.Request().Context(), claims, ctx.Param("test_id"), request)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
@@ -94,11 +109,25 @@ func (c *Controller) Update(ctx echo.Context) error {
 }
 
 func (c *Controller) Delete(ctx echo.Context) error {
-	if err := c.uc.Delete(ctx.Request().Context(), ctx.Param("test_id")); err != nil {
+	claims, err := getClaims(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := c.uc.Delete(ctx.Request().Context(), claims, ctx.Param("test_id")); err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}
 
 	return httpresponse.JSON(ctx, http.StatusOK, constant.CodeSuccess, constant.MessageDeleted, nil)
+}
+
+func getClaims(ctx echo.Context) (token.Claims, error) {
+	claims, ok := ctx.Get(middleware.UserClaimsKey).(token.Claims)
+	if !ok {
+		return token.Claims{}, httpresponse.Error(ctx, http.StatusUnauthorized, constant.CodeUnauthorized, constant.MessageUnauthorized)
+	}
+
+	return claims, nil
 }
 
 func parseListRequest(ctx echo.Context) (model.TestDBListRequest, error) {

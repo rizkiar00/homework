@@ -1,6 +1,7 @@
 package constant
 
 const (
+	RoleAdmin                 = "admin"
 	RoleUser                  = "user"
 	TokenTypeBearer           = "Bearer"
 	AuthorizationBearerPrefix = "Bearer "

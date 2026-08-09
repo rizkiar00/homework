@@ -12,6 +12,7 @@ import (
 	testDBRepo "github.com/rizkiar00/homework/internal/repository/db/test_db"
 	"github.com/rizkiar00/homework/pkg/constant"
 	"github.com/rizkiar00/homework/pkg/customerror"
+	"github.com/rizkiar00/homework/pkg/token"
 )
 
 type usecase struct {
@@ -37,7 +38,7 @@ func (u *usecase) Create(ctx context.Context, createdBy string, request model.Cr
 	return toResponse(row), nil
 }
 
-func (u *usecase) FindAll(ctx context.Context, request model.TestDBListRequest) (model.TestDBListResponse, error) {
+func (u *usecase) FindAll(ctx context.Context, claims token.Claims, request model.TestDBListRequest) (model.TestDBListResponse, error) {
 	request = normalizeListRequest(request)
 	orderBy, err := normalizeOrderBy(request.OrderBy)
 	if err != nil {
@@ -54,6 +55,8 @@ func (u *usecase) FindAll(ctx context.Context, request model.TestDBListRequest) 
 		Offset:   (request.Page - 1) * request.Limit,
 		OrderBy:  orderBy,
 		OrderDir: orderDir,
+		UserID:   claims.UserID,
+		Role:     claims.Role,
 	})
 	if err != nil {
 		return model.TestDBListResponse{}, err
@@ -77,8 +80,8 @@ func (u *usecase) FindAll(ctx context.Context, request model.TestDBListRequest) 
 	}, nil
 }
 
-func (u *usecase) FindByID(ctx context.Context, id string) (model.TestDBResponse, error) {
-	row, err := u.repo.FindByID(ctx, id)
+func (u *usecase) FindByID(ctx context.Context, claims token.Claims, id string) (model.TestDBResponse, error) {
+	row, err := u.repo.FindByID(ctx, id, claims.UserID, claims.Role)
 	if err != nil {
 		return model.TestDBResponse{}, err
 	}
@@ -86,11 +89,11 @@ func (u *usecase) FindByID(ctx context.Context, id string) (model.TestDBResponse
 	return toResponse(row), nil
 }
 
-func (u *usecase) Update(ctx context.Context, id string, request model.UpdateTestDBRequest) (model.TestDBResponse, error) {
+func (u *usecase) Update(ctx context.Context, claims token.Claims, id string, request model.UpdateTestDBRequest) (model.TestDBResponse, error) {
 	row, err := u.repo.Update(ctx, entity.TestTable{
 		TestID:   id,
 		DescTest: request.DescTest,
-	})
+	}, claims.UserID, claims.Role)
 	if err != nil {
 		return model.TestDBResponse{}, err
 	}
@@ -98,8 +101,8 @@ func (u *usecase) Update(ctx context.Context, id string, request model.UpdateTes
 	return toResponse(row), nil
 }
 
-func (u *usecase) Delete(ctx context.Context, id string) error {
-	return u.repo.Delete(ctx, id)
+func (u *usecase) Delete(ctx context.Context, claims token.Claims, id string) error {
+	return u.repo.Delete(ctx, id, claims.UserID, claims.Role)
 }
 
 func toResponse(row entity.TestTable) model.TestDBResponse {

@@ -29,6 +29,8 @@ type TestDBFindAllOption struct {
 	Offset   int
 	OrderBy  string
 	OrderDir string
+	UserID   string
+	Role     string
 }
 
 type TestDBListResponse struct {
