@@ -13,7 +13,7 @@ type TestTable struct {
 	CreatedBy *string    `gorm:"column:created_by;type:uuid"`
 	CreatedAt time.Time  `gorm:"column:created_at"`
 	UpdatedBy *string    `gorm:"column:updated_by;type:uuid"`
-	UpdatedAt *time.Time `gorm:"column:updated_at"`
+	UpdatedAt *time.Time `gorm:"column:updated_at;autoUpdateTime:false"`
 
 	CreatedByUsername *string `gorm:"column:created_by_username;->"`
 	UpdatedByUsername *string `gorm:"column:updated_by_username;->"`

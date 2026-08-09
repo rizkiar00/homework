@@ -24,17 +24,21 @@ func New(repo testDBRepo.Repository) *usecase {
 }
 
 func (u *usecase) Create(ctx context.Context, claims token.Claims, request model.CreateTestDBRequest) (model.TestDBResponse, error) {
+	now := time.Now()
 	row, err := u.repo.Create(ctx, entity.TestTable{
 		TestID:    uuid.NewString(),
 		DescTest:  request.DescTest,
 		IsActive:  true,
 		CreatedBy: stringPointer(claims.UserID),
-		CreatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedBy: stringPointer(claims.UserID),
+		UpdatedAt: &now,
 	})
 	if err != nil {
 		return model.TestDBResponse{}, err
 	}
 	row.CreatedByUsername = stringPointer(claims.Username)
+	row.UpdatedByUsername = stringPointer(claims.Username)
 
 	return toResponse(row), nil
 }
