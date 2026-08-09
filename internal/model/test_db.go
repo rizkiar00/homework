@@ -11,10 +11,12 @@ type UpdateTestDBRequest struct {
 }
 
 type TestDBResponse struct {
-	TestID    string    `json:"test_id"`
-	DescTest  *string   `json:"desc_test"`
-	CreatedBy *string   `json:"created_by"`
-	CreatedAt time.Time `json:"created_at"`
+	TestID    string     `json:"test_id"`
+	DescTest  *string    `json:"desc_test"`
+	CreatedBy *string    `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedBy *string    `json:"updated_by"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type TestDBListRequest struct {

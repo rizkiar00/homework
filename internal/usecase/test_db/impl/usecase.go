@@ -23,17 +23,18 @@ func New(repo testDBRepo.Repository) *usecase {
 	return &usecase{repo: repo}
 }
 
-func (u *usecase) Create(ctx context.Context, createdBy string, request model.CreateTestDBRequest) (model.TestDBResponse, error) {
+func (u *usecase) Create(ctx context.Context, claims token.Claims, request model.CreateTestDBRequest) (model.TestDBResponse, error) {
 	row, err := u.repo.Create(ctx, entity.TestTable{
 		TestID:    uuid.NewString(),
 		DescTest:  request.DescTest,
 		IsActive:  true,
-		CreatedBy: stringPointer(createdBy),
+		CreatedBy: stringPointer(claims.UserID),
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		return model.TestDBResponse{}, err
 	}
+	row.CreatedByUsername = stringPointer(claims.Username)
 
 	return toResponse(row), nil
 }
@@ -109,8 +110,10 @@ func toResponse(row entity.TestTable) model.TestDBResponse {
 	return model.TestDBResponse{
 		TestID:    row.TestID,
 		DescTest:  row.DescTest,
-		CreatedBy: row.CreatedBy,
+		CreatedBy: row.CreatedByUsername,
 		CreatedAt: row.CreatedAt,
+		UpdatedBy: row.UpdatedByUsername,
+		UpdatedAt: row.UpdatedAt,
 	}
 }
 
@@ -146,6 +149,8 @@ func normalizeOrderBy(orderBy string) (string, error) {
 		return constant.OrderByDescTest, nil
 	case constant.OrderByCreatedAt:
 		return constant.OrderByCreatedAt, nil
+	case constant.OrderByUpdatedAt:
+		return constant.OrderByUpdatedAt, nil
 	default:
 		return "", customerror.BadRequest(constant.MessageInvalidOrderBy)
 	}

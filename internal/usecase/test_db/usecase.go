@@ -8,7 +8,7 @@ import (
 )
 
 type Usecase interface {
-	Create(ctx context.Context, createdBy string, request model.CreateTestDBRequest) (model.TestDBResponse, error)
+	Create(ctx context.Context, claims token.Claims, request model.CreateTestDBRequest) (model.TestDBResponse, error)
 	FindAll(ctx context.Context, claims token.Claims, request model.TestDBListRequest) (model.TestDBListResponse, error)
 	FindByID(ctx context.Context, claims token.Claims, id string) (model.TestDBResponse, error)
 	Update(ctx context.Context, claims token.Claims, id string, request model.UpdateTestDBRequest) (model.TestDBResponse, error)

@@ -37,7 +37,7 @@ func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOpti
 		return nil, 0, errors.New(constant.MessageDatabaseNotConfigured)
 	}
 
-	query := r.db.WithContext(ctx).Model(&entity.TestTable{}).Where("is_active = ?", true)
+	query := r.db.WithContext(ctx).Model(&entity.TestTable{}).Where("test_table.is_active = ?", true)
 	query = applyOwnerScope(query, option.UserID, option.Role)
 
 	var total int64
@@ -47,7 +47,14 @@ func (r *repository) FindAll(ctx context.Context, option model.TestDBFindAllOpti
 
 	var rows []entity.TestTable
 	order := fmt.Sprintf("%s %s", option.OrderBy, option.OrderDir)
-	if err := query.Order(order).Limit(option.Limit).Offset(option.Offset).Find(&rows).Error; err != nil {
+	if err := query.
+		Select("test_table.*, creator.username AS created_by_username, updater.username AS updated_by_username").
+		Joins("LEFT JOIN public.users AS creator ON creator.user_id = test_table.created_by").
+		Joins("LEFT JOIN public.users AS updater ON updater.user_id = test_table.updated_by").
+		Order(order).
+		Limit(option.Limit).
+		Offset(option.Offset).
+		Find(&rows).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -60,7 +67,12 @@ func (r *repository) FindByID(ctx context.Context, id string, userID string, rol
 	}
 
 	var row entity.TestTable
-	query := r.db.WithContext(ctx).Where(constant.ColumnTestID+" = ? AND is_active = ?", id, true)
+	query := r.db.WithContext(ctx).
+		Model(&entity.TestTable{}).
+		Select("test_table.*, creator.username AS created_by_username, updater.username AS updated_by_username").
+		Joins("LEFT JOIN public.users AS creator ON creator.user_id = test_table.created_by").
+		Joins("LEFT JOIN public.users AS updater ON updater.user_id = test_table.updated_by").
+		Where("test_table."+constant.ColumnTestID+" = ? AND test_table.is_active = ?", id, true)
 	query = applyOwnerScope(query, userID, role)
 	if err := query.First(&row).Error; err != nil {
 		return entity.TestTable{}, err
@@ -124,5 +136,5 @@ func applyOwnerScope(query *gorm.DB, userID string, role string) *gorm.DB {
 		return query
 	}
 
-	return query.Where("created_by = ?", userID)
+	return query.Where("test_table.created_by = ?", userID)
 }

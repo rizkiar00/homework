@@ -48,7 +48,7 @@ func (c *Controller) Create(ctx echo.Context) error {
 		return err
 	}
 
-	response, err := c.uc.Create(ctx.Request().Context(), claims.UserID, request)
+	response, err := c.uc.Create(ctx.Request().Context(), claims, request)
 	if err != nil {
 		return httpresponse.CustomError(ctx, err)
 	}

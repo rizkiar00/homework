@@ -448,6 +448,7 @@ paths:
               - test_id
               - desc_test
               - created_at
+              - updated_at
             default: test_id
           description: Column used for sorting.
         - name: order_dir
@@ -951,11 +952,19 @@ components:
           nullable: true
         created_by:
           type: string
-          format: uuid
           nullable: true
+          example: rizki
         created_at:
           type: string
           format: date-time
+        updated_by:
+          type: string
+          nullable: true
+          example: rizki
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     TestDBAPIResponse:
       type: object
       required:
